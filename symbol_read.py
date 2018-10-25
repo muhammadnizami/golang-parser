@@ -141,7 +141,7 @@ def yield_op(charbuffer, l):
 			yield from yield_op(charbuffer[pos:pos+len(remainder_strs[i])], l)
 			pos = pos + len(remainder_strs[i])
 		yield longest_op, l, charbuffer[pos][1]
-		pos = pos + len(remainder_strs[i])
+		pos = pos + len(longest_op)
 	i = len(remainder_strs)-1
 	if remainder_strs[i] is not '':
 		yield from yield_op(charbuffer[pos:pos+len(remainder_strs[i])], l)
