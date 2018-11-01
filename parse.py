@@ -1,5 +1,6 @@
 import preprocess
 import symbol_read
+import string
 # a procedural program for parsing
 
 #state variables
@@ -218,16 +219,76 @@ def accept(T):
 # <RecvExpr> ::= Expression
 # <ReturnStmt> ::= "return" [ ExpressionList ]
 # <BreakStmt> ::= "break" [ Label ]
+def BreakStmt():
+	accept("break")
+	if symbol in set(string.ascii_letters):
+		nt_Label()
+
 # <ContinueStmt> ::= "continue" [ Label ]
+def nt_ContinueStmt():
+	accept("continue")
+	if symbol in set(string.ascii_letters):
+		nt_Label()
+
 # <GotoStmt> ::= "goto" Label
+def nt_GotoStmt():
+	accept("goto")
+	nt_Label()
+
 # <FallthroughStmt> ::= "fallthrough"
+def nt_FallthroughStmt():
+	accept("fallthrough")
+
 # <DeferStmt> ::= "defer" Expression
+def nt_DeferStmt():
+	accept("defer")
+	nt_Expression()
+
 # <SourceFile> ::= PackageClause ";" { ImportDecl ";" } { TopLevelDecl ";" }
+def nt_SourceFile():
+	nt_PackageClause()
+	accept(";")
+	while symbol=="import":
+		nt_ImportDecl()
+		accept(";")
+	while symbol in {"const","type","var","func"}:
+		nt_TopLevelDecl()
+		accept(";")
+
 # <PackageClause> ::= "package" PackageName
+def nt_PackageClause():
+	accept("package")
+	nt_PackageName()
+
 # <PackageName> ::= identifier
+def nt_PackageName():
+	nt_identifier()
+
 # <ImportDecl> ::= "import" ( ImportSpec | "(" { ImportSpec ";" } ")" )
+def nt_ImportDecl():
+	accept("import")
+	if symbol in set(string.ascii_letters).union({".","`",'"'}):
+		nt_ImportSpec()
+	elif symbol=="(":
+		accept("(")
+		while symbol in set(string.ascii_letters).union({".","`",'"'}):
+			nt_ImportSpec()
+			accept(";")
+		accept(")")
+	else:
+		output_error_and_halt()
+
 # <ImportSpec> ::= [ "." | PackageName ] ImportPath
+def nt_ImportSpec():
+	if symbol==".":
+		accept(".")
+	elif symbol in set(string.ascii_letters):
+		nt_PackageName()
+	nt_ImportPath()
+
 # <ImportPath> ::= string_lit
+def nt_ImportPath():
+	nt_string_lit()
 
 
 
