@@ -219,15 +219,15 @@ def accept(T):
 # <RecvExpr> ::= Expression
 # <ReturnStmt> ::= "return" [ ExpressionList ]
 # <BreakStmt> ::= "break" [ Label ]
-def BreakStmt():
+def nt_BreakStmt():
 	accept("break")
-	if symbol in set(string.ascii_letters):
+	if symbol in set(string.ascii_letters).union({"_"}):
 		nt_Label()
 
 # <ContinueStmt> ::= "continue" [ Label ]
 def nt_ContinueStmt():
 	accept("continue")
-	if symbol in set(string.ascii_letters):
+	if symbol in set(string.ascii_letters).union({"_"}):
 		nt_Label()
 
 # <GotoStmt> ::= "goto" Label
@@ -267,11 +267,11 @@ def nt_PackageName():
 # <ImportDecl> ::= "import" ( ImportSpec | "(" { ImportSpec ";" } ")" )
 def nt_ImportDecl():
 	accept("import")
-	if symbol in set(string.ascii_letters).union({".","`",'"'}):
+	if symbol in set(string.ascii_letters).union({"_",".","`",'"'}):
 		nt_ImportSpec()
 	elif symbol=="(":
 		accept("(")
-		while symbol in set(string.ascii_letters).union({".","`",'"'}):
+		while symbol in set(string.ascii_letters).union({"_",".","`",'"'}):
 			nt_ImportSpec()
 			accept(";")
 		accept(")")
