@@ -216,8 +216,18 @@ def accept(T):
 # <CommClause> ::= CommCase ":" StatementList
 # <CommCase> ::= "case" ( SendStmt | RecvStmt ) | "default"
 # <RecvStmt> ::= [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr
+	#this is not LL(1) because first(ExpressionList) contains first(IdentifierList)
+
 # <RecvExpr> ::= Expression
+def nt_RecvExpr():
+	nt_Expression()
+
 # <ReturnStmt> ::= "return" [ ExpressionList ]
+def nt_ReturnStmt():
+	if symbol != ";":
+		nt_ExpressionList()
+
+
 # <BreakStmt> ::= "break" [ Label ]
 def nt_BreakStmt():
 	accept("break")
