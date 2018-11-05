@@ -215,8 +215,36 @@ def accept(T):
 # <SelectStmt> ::= "select" "{" { CommClause } "}"
 # <CommClause> ::= CommCase ":" StatementList
 # <CommCase> ::= "case" ( SendStmt | RecvStmt ) | "default"
+	#this is not LL(1) because first(SendStmt) and first(RecvStmt) intersects each other
+
 # <RecvStmt> ::= [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr
 	#this is not LL(1) because first(ExpressionList) contains first(IdentifierList)
+	#here we first assume that it is IdentifierList ":=", but if a symbol other outside that we switch to ExpressionList "="
+def nt_RecvStmt():
+	after_identifier = False
+	if symbol in set(string.ascii_letters+"_"):
+		nt_identifier()
+		after_identifier = True
+
+	while symbol == ",":
+		accept(",")
+		after_identifier = False
+		if symbol in set(string.ascii_letters+"_"):
+			nt_identifier()
+			after_idetifier=True
+
+
+	if symbol == ":=":
+		accept(":=")
+	elif symbol == "=":
+		accept("=")
+	else:
+		if after_identifier:
+			nt_binary_op()
+		nt_ExpressionList()
+		accept("=")
+
+	nt_RecvExpr()
 
 # <RecvExpr> ::= Expression
 def nt_RecvExpr():
