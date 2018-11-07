@@ -132,8 +132,42 @@ def nt_rune_lit():
 # <interpreted_string_lit> ::= `"` { unicode_value | byte_value } `"`
 
 # <Type> ::= TypeName | TypeLit | "(" Type ")"
+def nt_Type():
+	if symbol == "(":
+		accept("(")
+		nt_Type()
+		accept(")")
+	elif symbol in set({"[","struct","*","func","interface","map","chan","<-"})
+		nt_TypeLit()
+	elif symbol in set(string.ascii_letters).union({"_"}):
+		nt_TypeName()
+
 # <TypeName> ::= identifier | QualifiedIdent
+def nt_TypeName():
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_identifier()
+	elif symbol in set(string.ascii_letters).union({"_"}):
+		nt_QualifiedIdent()
+
 # <TypeLit> ::= ArrayType | StructType | PointerType | FunctionType | InterfaceType | SliceType | MapType | ChannelType
+def nt_TypeLit():
+	if symbol == "[":
+		nt_ArrayType()
+	elif symbol == "struct":
+		nt_StructType()
+	elif symbol == "*":
+		nt_PointerType()
+	elif symbol == "func":
+		nt_FunctionType()
+	elif symbol == "interface":
+		nt_InterfaceType()
+	elif symbol == "[]":
+		nt_SliceType()
+	elif symbol == "map":
+		nt_MapType()
+	else:
+		nt_ChannelType()
+		
 # <ArrayType> ::= "[" ArrayLength "]" ElementType
 # <ArrayLength> ::= Expression
 # <ElementType> ::= Type
