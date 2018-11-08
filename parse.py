@@ -216,37 +216,53 @@ def accept(T):
 # <CommClause> ::= CommCase ":" StatementList
 # <CommCase> ::= "case" ( SendStmt | RecvStmt ) | "default"
 	#this is not LL(1) because first(SendStmt) and first(RecvStmt) intersects each other
-
 # <RecvStmt> ::= [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr
 	#this is not LL(1) because first(ExpressionList) contains first(IdentifierList)
 	#here we first assume that it is IdentifierList ":=", but if a symbol other outside that we switch to ExpressionList "="
-def nt_RecvStmt():
-	after_identifier = False
-	if symbol in set(string.ascii_letters+"_"):
-		nt_identifier()
-		after_identifier = True
-
-	while symbol == ",":
-		accept(",")
+# This is the implementation for both <RecvStmt> and <CommCase>
+def CommCase():
+	if symbol=="case":
+		accept("case")
 		after_identifier = False
 		if symbol in set(string.ascii_letters+"_"):
 			nt_identifier()
-			after_idetifier=True
+			after_identifier = True
 
+		isList = False
+		while symbol == ",":
+			accept(",")
+			isList = True
+			after_identifier = False
+			if symbol in set(string.ascii_letters+"_"):
+				nt_identifier()
+				after_idetifier=True
 
-	if symbol == ":=":
-		accept(":=")
-	elif symbol == "=":
-		accept("=")
+		if symbol == "<-" and not isList:
+			accept("<-")	
+			nt_Expression()
+		elif symbol == ":=":
+			accept(":=")
+			nt_RecvExpr()
+		elif symbol == "=":
+			accept("=")
+			nt_RecvExpr()
+		else:
+			if after_identifier:
+				nt_binary_op()
+			nt_Expression()
+			if symbol == "<-":
+				accept("<-")
+				nt_Expression()
+			else:
+				if symbol == ",":
+					accept(",")
+					nt_ExpressionList()
+				accept("=")
+				nt_RecvExpr()
+
 	else:
-		if after_identifier:
-			nt_binary_op()
-		nt_ExpressionList()
-		accept("=")
+		accept("default")
 
-	nt_RecvExpr()
-
-# <RecvExpr> ::= Expression
 def nt_RecvExpr():
 	nt_Expression()
 
