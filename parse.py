@@ -307,7 +307,7 @@ def nt_TypeLit():
 	#this is not LL(1) because first(ExpressionList) contains first(IdentifierList)
 	#here we first assume that it is IdentifierList ":=", but if a symbol other outside that we switch to ExpressionList "="
 # This is the implementation for both <RecvStmt> and <CommCase>
-def CommCase():
+def nt_CommCase():
 	if symbol=="case":
 		accept("case")
 		after_identifier = False
