@@ -137,7 +137,7 @@ def nt_Type():
 		accept("(")
 		nt_Type()
 		accept(")")
-	elif symbol in set({"[","struct","*","func","interface","map","chan","<-"})
+	elif symbol in set({"[","struct","*","func","interface","map","chan","<-"}):
 		nt_TypeLit()
 	elif symbol in set(string.ascii_letters).union({"_"}):
 		nt_TypeName()
@@ -167,13 +167,49 @@ def nt_TypeLit():
 		nt_MapType()
 	else:
 		nt_ChannelType()
-		
+
 # <ArrayType> ::= "[" ArrayLength "]" ElementType
+def nt_ArrayType():
+	accept("[")
+	nt_ArrayLength()
+	accept("]")
+	nt_ElementType()
+
 # <ArrayLength> ::= Expression
+def nt_Expression():
+	nt_Expression()
+
 # <ElementType> ::= Type
+def nt_ElementType():
+	nt_Type()
+
 # <SliceType> ::= "[" "]" ElementType
+def nt_SliceType():
+	accept("[]")
+	nt_ElementType()
+
 # <StructType> ::= "struct" "{" { FieldDecl ";" } "}"
+def nt_StructType():
+	accept("struct")
+	accept("{")
+	while symbol in set(string.ascii_letters).union({"_"}):
+		nt_FieldDecl()
+		accept(";")
+	accept("}")
+
 # <FieldDecl> ::= (IdentifierList Type | EmbeddedField) [ Tag ]
+def nt_FieldDecl():
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_IdentifierList()
+		nt_Type()
+	elif symbol in set(string.ascii_letters).union({"_","*"}):
+		nt_EmbeddedField()
+	else:
+		output_error_and_halt()
+	
+	if symbol in set(string.ascii_letters):
+		nt_Tag()
+
 # <EmbeddedField> ::= [ "*" ] TypeName
 # <Tag> ::= string_lit
 # <PointerType> ::= "*" BaseType
