@@ -294,13 +294,66 @@ def nt_TypeLit():
 # <TypeList> ::= Type { "," Type }
 # <ForStmt> ::= "for" [ Condition | ForClause | RangeClause ] Block
 # <Condition> ::= Expression
+def nt_Condition():
+	nt_Expression()
+
 # <ForClause> ::= [ InitStmt ] ";" [ Condition ] ";" [ PostStmt ]
+def nt_ForClause():
+	if symbol != ";":
+		nt_InitStmt()
+	if symbol != ";":
+		nt_Condition()
+	if symbol != "{": #FOLLOW(ForClause)
+		nt_PostStmt()
+
 # <InitStmt> ::= SimpleStmt
+def nt_InitStmt():
+	nt_SimpleStmt()
 # <PostStmt> ::= SimpleStmt
+def nt_PostStmt():
+	nt_SimpleStmt()
 # <RangeClause> ::= [ ExpressionList "=" | IdentifierList ":=" ] "range" Expression
+def nt_RangeClause():
+	after_identifier = False
+	if symbol in set(string.ascii_letters+"_"):
+		nt_identifier()
+		after_identifier = True
+ 	while symbol == ",":
+		accept(",")
+		after_identifier = False
+		if symbol in set(string.ascii_letters+"_"):
+			nt_identifier()
+			after_idetifier=True
+ 	if symbol == ":=":
+		accept(":=")
+	elif symbol == "=":
+		accept("=")
+	elif symbol != "range":
+		if after_identifier:
+			nt_binary_op()
+		nt_ExpressionList()
+		accept("=")
+ 	accept("range")
+ 	nt_Expression()
+
 # <GoStmt> ::= "go" Expression
+def nt_GoStmt():
+	accept("go")
+	nt_Expression()
+
 # <SelectStmt> ::= "select" "{" { CommClause } "}"
+def nt_SelectStmt():
+	accept("select")
+	accept("{")
+	while symbol == "case" or symbol == "default":
+		nt_CommClause()
+	accept("}")
+
 # <CommClause> ::= CommCase ":" StatementList
+def nt_CommClause():
+	nt_CommCase()
+	accept(":")
+	nt_StatementList()
 # <CommCase> ::= "case" ( SendStmt | RecvStmt ) | "default"
 	#this is not LL(1) because first(SendStmt) and first(RecvStmt) intersects each other
 # <RecvStmt> ::= [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr
@@ -340,12 +393,14 @@ def nt_CommCase():
 			if symbol == "<-":
 				accept("<-")
 				nt_Expression()
-			else:
+			elif symbol=="," or symbol=="=":
 				if symbol == ",":
 					accept(",")
 					nt_ExpressionList()
 				accept("=")
 				nt_RecvExpr()
+			elif isList:
+				output_error_and_halt()
 
 	else:
 		accept("default")
