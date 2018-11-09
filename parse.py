@@ -589,6 +589,22 @@ def nt_FunctionLit():
 
 # <PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
 #	FOLLOW(Selector) contains "." which is in FIRST(Selector)
+#	<PrimaryExpr> ::= ( identifier | Literal | "(" Expression ")" ) { SelectorOrTypeAssertion | IndexOrSlice }
+def nt_PrimaryExpr():
+	if symbol in set(string.ascii_letters + "_"):
+		nt_identifier()
+	elif symbol=="(":
+		accept("(")
+		nt_Expression()
+		accept(")")
+	else:
+		nt_Literal()
+
+	while symbol in {".","["}:
+		if symbol==".":
+			nt_SelectorOrTypeAssertion()
+		else:
+			nt_IndexOrSlice()
 # also FOLLOW(TypeAssertion) is the same
 # <Selector> ::= "." identifier
 # <Index> ::= "[" Expression "]"
