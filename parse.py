@@ -489,7 +489,9 @@ def Operand():
 	if symbol in set(string.ascii_letters+"_"):
 		nt_OperandName()
 	elif symbol == "(":
+		accept("(")
 		nt_Expression()
+		accept(")")
 	else:
 		nt_Literal()
 
