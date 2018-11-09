@@ -472,11 +472,12 @@ def nt_FunctionDecl():
 # <BasicLit> ::= int_lit | float_lit | imaginary_lit | rune_lit | string_lit
 # <OperandName> ::= identifier | QualifiedIdent.
 # NOT LL(1)
-# change to: <OperandName> ::= identifier "." QualifiedIdent
+# change to: <OperandName> ::= identifier [ "." identifier] 
 def nt_OperandName():
 	nt_identifier()
-	accept(".")
-	nt_QualifiedIdent()
+	if symbol==".":
+		accept(".")
+		nt_identifier()
 
 # <QualifiedIdent> ::= PackageName "." identifier
 def nt_QualifiedIdent():
