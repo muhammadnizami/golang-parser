@@ -471,9 +471,46 @@ def nt_FunctionDecl():
 # <Literal> ::= BasicLit | CompositeLit | FunctionLit
 # <BasicLit> ::= int_lit | float_lit | imaginary_lit | rune_lit | string_lit
 # <OperandName> ::= identifier | QualifiedIdent.
+# NOT LL(1)
+# change to: <OperandName> ::= identifier "." QualifiedIdent
+def nt_OperandName():
+	nt_identifier()
+	accept(".")
+	nt_QualifiedIdent()
+
 # <QualifiedIdent> ::= PackageName "." identifier
+def nt_QualifiedIdent():
+	nt_PackageName()
+	accept(".")
+	nt_identifier()
+
 # <CompositeLit> ::= LiteralType LiteralValue
+def nt_CompositeLit():
+	nt_LiteralType()
+	nt_LiteralValue()
+
 # <LiteralType> ::= StructType | ArrayType | "[" "..." "]" ElementType | SliceType | MapType | TypeName
+def nt_LiteralType():
+	if symbol=="struct":
+		nt_StructType()
+	elif symbol=="[": #ArrayType or "[" "..." "]" ElementType or SliceType
+		accept("[")
+		if symbol=="...":
+			accept("...")
+			nt_ElementType()
+		elif symbol=="]":
+			accept("]")
+			nt_ElementType()
+		else:
+			accept("[")
+			nt_ArrayLength()
+			accept("]")
+			nt_ElementType()
+	elif symbol=="map":
+		nt_MapType()
+	elif symbol in set(string.ascii_letters+'_'):
+		nt_TypeName()
+
 # <LiteralValue> ::= "{" [ ElementList [ "," ] ] "}"
 # <ElementList> ::= KeyedElement { "," KeyedElement }
 #	this one is implementation for both LiteralValue and ElementList
