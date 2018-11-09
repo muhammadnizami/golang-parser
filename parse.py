@@ -464,10 +464,35 @@ def nt_FunctionDecl():
 		nt_FunctionBody()
 
 # <FunctionName> ::= identifier
+def nt_FunctionName():
+	nt_identifier()
+
 # <FunctionBody> ::= Block
+def nt_FunctionBody():
+	nt_Block()
+
 # <MethodDecl> ::= "func" Receiver MethodName Signature [ FunctionBody ]
+def MethodDecl():
+	accept("func")
+	nt_Receiver()
+	nt_MethodName()
+	nt_Signature()
+	if symbol == "{":
+		nt_FunctionBody()
+
 # <Receiver> ::= Parameters
+def nt_Receiver():
+	nt_Parameters()
+
 # <Operand> ::= Literal | OperandName | "(" Expression ")"
+def Operand():
+	if symbol in set(string.ascii_letters+"_"):
+		nt_OperandName()
+	elif symbol == "(":
+		nt_Expression()
+	else:
+		nt_Literal()
+
 # <Literal> ::= BasicLit | CompositeLit | FunctionLit
 # <BasicLit> ::= int_lit | float_lit | imaginary_lit | rune_lit | string_lit
 # <OperandName> ::= identifier | QualifiedIdent.
