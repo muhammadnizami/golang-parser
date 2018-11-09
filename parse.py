@@ -764,6 +764,37 @@ def nt_assign_op():
 
 # <IfStmt> ::= "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
 # 	FIRST(SimpleStmt) also contains FIRST(Expression)
+# 	<IfStmt> ::= "if" [ [ ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
+# 	<IfStmt> ::= "if" [ [ Expression [ "<-" Expression | "++" | "--" | { "," Expression } assign_op ExpressionList ] | IdentifierList ":::=" ExpressionList] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
+def nt_IfStmt():
+	accept("if")
+	if symbol in set(string.ascii_letters+"_"): #maybe identifierlist, maybe expression
+		pass
+		#TODO implement this
+	elif symbol != ";":
+		nt_Expression()
+		if symbol!="{":
+			if symbol== "<-":
+				accept("<-")
+				nt_Expression()
+			elif symbol=="++":
+				accept("++")
+			elif symbol=="--":
+				accept("--")
+			elif symbol=="," or symbol in {"+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
+				while symbol==",":
+					nt_Expression()
+				nt_assign_op()
+				nt_ExpressionList()
+			accept(";")
+			nt_Expression()
+		nt_Block()
+		if symbol=="else":
+			accept("else")
+			if symbol=="if":
+				nt_IfStmt()
+			else:
+				nt_Block()
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
