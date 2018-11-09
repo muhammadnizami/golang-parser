@@ -40,7 +40,14 @@ def main(filename):
 def accept(T):
 	global symbol
 	if T == symbol:
-		read_one_symbool()
+		read_one_symbol()
+	else:
+		output_error_and_halt()
+
+def acceptset(Ts):
+	global symbol
+	if symbol in Ts:
+		read_one_symbol()
 	else:
 		output_error_and_halt()
 
@@ -226,73 +233,265 @@ def nt_TypeLit():
 # <Element> ::= Expression | LiteralValue
 # <FunctionLit> ::= "func" Signature FunctionBody
 # <PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
+#	FOLLOW(Selector) contains "." which is in FIRST(Selector)
+# also FOLLOW(TypeAssertion) is the same
 # <Selector> ::= "." identifier
 # <Index> ::= "[" Expression "]"
 # <Slice> ::= "[" [ Expression ] ":" [ Expression ] "]" | "[" [ Expression ] ":" Expression ":" Expression "]"
 # <TypeAssertion> ::= "." "(" Type ")"
+# TODO SelectorOrTypeAssertion
+# TODO IndexOrSlice
 # <Arguments> ::= "(" [ ( ExpressionList | Type [ "," ExpressionList ] ) [ "..." ] [ "," ] ] ")"
 # <MethodExpr> ::= ReceiverType "." MethodName
 # <ReceiverType> ::= Type
 # <Expression> ::= UnaryExpr | Expression binary_op Expression
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
+def nt_UnaryExpr():
+	if symbol in nt_unary_op_set:
+		unary_op()
+	else:
+		nt_PrimaryExpr()
+
 # <binary_op> ::= "||" | "&&" | rel_op | add_op | mul_op
+def nt_binary_op():
+	if symbol=="||":
+		accept("||")
+	elif symbol=="&&":
+		accept("&&")
+	elif symbol in nt_rel_op_set:
+		nt_rel_op()
+	elif symbol in nt_add_op_set:
+		nt_add_op()
+	elif symbol in nt_mul_op_set:
+		nt_mul_op()
+	else:
+		output_error_and_halt()
+
 # <rel_op> ::= "==" | "!=" | "<" | "<=" | ">" | ">="
+nt_rel_op_set = {"==" , "!=" , "<" , "<=" , ">" , ">="}
+def nt_rel_op():
+	acceptset(nt_rel_op_set)
+
 # <add_op> ::= "+" | "-" | "|" | "^"
+nt_add_op_set = {"+" , "-" , "|" , "^"}
+def nt_add_op():
+	acceptset(nt_add_op_set)
+
 # <mul_op> ::= "*" | "/" | "%" | "<<" | ">>" | "&" | "&^"
+nt_mul_op_set = {"*" , "/" , "%" , "<<" , ">>" , "&" , "&^"}
+def nt_mul_op():
+	acceptset(nt_mul_op_set)
+
 # <unary_op> ::= "+" | "-" | "!" | "^" | "*" | "&" | "<-"
+nt_unary_op_set = {"+","-","!","^","*","&","<-"}
+def nt_unary_op():
+	acceptset(nt_unary_op_set)
+
 # <Conversion> ::= Type "(" Expression [ "," ] ")"
+def nt_Conversion():
+	nt_Type()
+	accept("(")
+	nt_Expression()
+	if symbol==",":
+		accept(",")
+	accept(")")
+
 # <Statement> ::= Declaration | LabeledStmt | SimpleStmt | GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt | FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt | DeferStmt
+#	NOT LL(1)
 # <SimpleStmt> ::= EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl
+#	NOT LL(1)
+
 # <EmptyStmt> ::=
+def EmptyStmt():
+	pass
+
 # <LabeledStmt> ::= Label ":" Statement
+def nt_LabeledStmt():
+	nt_Label()
+	accept(":")
+	nt_Statement()
+
 # <Label> ::= identifier
+def nt_Label():
+	nt_identifier()
 # <ExpressionStmt> ::= Expression
+def nt_ExpressionStmt():
+	nt_Expression()
+
 # <SendStmt> ::= Channel "<-" Expression
+def nt_SendStmt():
+	nt_Channel()
+	accept("<-")
+	nt_Expression()
+
 # <Channel> ::= Expression
+def nt_Channel():
+	nt_Expression()
+
 # <IncDecStmt> ::= Expression ( "++" | "--" )
+def nt_IncDecStmt():
+	nt_Expression()
+	if symbol=="++":
+		accept("++")
+	else:
+		accept("--")
+
 # <Assignment> ::= ExpressionList assign_op ExpressionList
+def nt_Assignment():
+	nt_ExpressionList()
+	nt_assign_op()
+	nt_ExpressionList()
+
 # <assign_op> ::= [ add_op | mul_op ] "="
+def nt_assign_op():
+	if symbol in {"+", "-", "|", "^"}:
+		nt_add_op()
+	elif symbol in {"*", "/", "%", "<<", ">>", "&", "&^"}:
+		nt_mul_op()
+	accept("=")
+
 # <IfStmt> ::= "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
+# 	FIRST(SimpleStmt) also contains FIRST(Expression)
+
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
+# maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
+
 # <ExprSwitchStmt> ::= "switch" [ SimpleStmt ";" ] [ Expression ] "{" { ExprCaseClause } "}"
+def nt_ExprSwitchStmt():
+	accept("switch")
+	#TODO continue.
+	#	FIRST(SimpleStmt) can be FIRST(Expression)
+
 # <ExprCaseClause> ::= ExprSwitchCase ":" StatementList
+def nt_ExprCaseClause():
+	nt_ExprSwitchCase()
+	accept(":")
+	nt_StatementList()
+
 # <ExprSwitchCase> ::= "case" ExpressionList | "default"
+def nt_ExprSwitchCase():
+	if symbol=="case":
+		accept("case")
+		nt_ExpressionList()
+	else:
+		accept("default")
+
 # <TypeSwitchStmt> ::= "switch" [ SimpleStmt ";" ] TypeSwitchGuard "{" { TypeCaseClause } "}"
+#	This one is also not LL(1)
+#	TODO implement this
+
 # <TypeSwitchGuard> ::= [ identifier ":=" ] PrimaryExpr "." "(" "type" ")"
+#	Not LL(1)
+def nt_TypeSwitchGuard():
+	if symbol in set(string.ascii_letters+"_"):
+		nt_identifier()
+		if symbol==":=":
+			accept(":=")
+			#cannot use nt_PrimaryExpr() here because "." is in FOLLOW(Selector)
+			#nt_PrimaryExpr()
+			#TODO fix this
+		else:
+			while symbol in {".","["}:
+				if symbol=="[":
+					nt_IndexOrSlice()
+				else:
+					accept(".")
+					if symbol!="(":
+						nt_identifier()
+					else:
+						accept("(")
+						if symbol!="type":
+							nt_Type()
+							accept(")")
+			accept("type")
+			accept(")")
+	else:
+		nt_PrimaryExpr()
+
 # <TypeCaseClause> ::= TypeSwitchCase ":" StatementList
+def nt_TypeCaseClause():
+	nt_TypeSwitchCase()
+	accept(":")
+	nt_StatementList()
+
 # <TypeSwitchCase> ::= "case" TypeList | "default"
+def nt_TypeSwitchCase():
+	if symbol=="case":
+		accept("case")
+		nt_TypeList()
+	elif symbol=="default":
+		accept("default")
+	else:
+		output_error_and_halt()
+
 # <TypeList> ::= Type { "," Type }
+def nt_TypeList():
+	nt_Type()
+	while symbol==",":
+		accept(",")
+		nt_Type()
+
 # <ForStmt> ::= "for" [ Condition | ForClause | RangeClause ] Block
-# <Condition> ::= Expression
-# <ForClause> ::= [ InitStmt ] ";" [ Condition ] ";" [ PostStmt ]
-# <InitStmt> ::= SimpleStmt
-# <PostStmt> ::= SimpleStmt
-# <RangeClause> ::= [ ExpressionList "=" | IdentifierList ":=" ] "range" Expression
-# <GoStmt> ::= "go" Expression
-# <SelectStmt> ::= "select" "{" { CommClause } "}"
-# <CommClause> ::= CommCase ":" StatementList
-# <CommCase> ::= "case" ( SendStmt | RecvStmt ) | "default"
-# <RecvStmt> ::= [ ExpressionList "=" | IdentifierList ":=" ] RecvExpr
-# <RecvExpr> ::= Expression
-# <ReturnStmt> ::= "return" [ ExpressionList ]
-# <BreakStmt> ::= "break" [ Label ]
-# <ContinueStmt> ::= "continue" [ Label ]
-# <GotoStmt> ::= "goto" Label
-# <FallthroughStmt> ::= "fallthrough"
-# <DeferStmt> ::= "defer" Expression
-# <SourceFile> ::= PackageClause ";" { ImportDecl ";" } { TopLevelDecl ";" }
-# <PackageClause> ::= "package" PackageName
-# <PackageName> ::= identifier
-# <ImportDecl> ::= "import" ( ImportSpec | "(" { ImportSpec ";" } ")" )
-# <ImportSpec> ::= [ "." | PackageName ] ImportPath
-# <ImportPath> ::= string_lit
-# <ExprSwitchCase> ::= "case" ExpressionList | "default"
-# <TypeSwitchStmt> ::= "switch" [ SimpleStmt ";" ] TypeSwitchGuard "{" { TypeCaseClause } "}"
-# <TypeSwitchGuard> ::= [ identifier ":=" ] PrimaryExpr "." "(" "type" ")"
-# <TypeCaseClause> ::= TypeSwitchCase ":" StatementList
-# <TypeSwitchCase> ::= "case" TypeList | "default"
-# <TypeList> ::= Type { "," Type }
-# <ForStmt> ::= "for" [ Condition | ForClause | RangeClause ] Block
+#	Not LL(1)
+def nt_ForStmt():
+	accept("for")
+	after_identifier = False
+	isList=False
+	if symbol in set(string.ascii_letters+"_"):
+		nt_identifier()
+		after_identifier = True
+	 	while symbol == "," and after_identifier:
+			accept(",")
+			isList=True
+			after_identifier = False
+			if symbol in set(string.ascii_letters+"_"):
+				nt_identifier()
+				after_identifier=True
+
+	if symbol == ":=" and after_identifier:
+		accept(":=")
+	 	accept("range")
+	 	nt_Expression()
+	elif symbol == "=" and after_identifier:
+		accept("=")
+	 	accept("range")
+	 	nt_Expression()
+	elif symbol != "{":
+		if after_identifier:
+			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
+							#TODO implement Arguments
+				accept("(")
+				nt_Expression()
+				if symbol==",":
+					nt_Expression()
+				accept(")")
+			while symbol=="." or symbol=="[":
+				if symbol=="[":
+					nt_IndexOrSlice()
+				else:
+					nt_SelectorOrTypeAssertion()
+			if symbol not in {",",";","="}:
+				nt_binary_op()
+				nt_Expression()
+		else:
+			nt_Expression()
+		if symbol==",":
+			accept(",")
+			isList=True
+			nt_ExpressionList()
+		elif symbol==";" and not isList: #ForClause
+			accept(";")
+			if symbol != ";":
+				nt_Condition()
+			accept(";")
+			if symbol != "{": #FOLLOW(ForClause)
+				nt_PostStmt()
+		if symbol=="=" or isList:
+			accept("=")
+		 	accept("range")
+		 	nt_Expression()
+	nt_Block() 	
+
 # <Condition> ::= Expression
 def nt_Condition():
 	nt_Expression()
@@ -301,8 +500,10 @@ def nt_Condition():
 def nt_ForClause():
 	if symbol != ";":
 		nt_InitStmt()
+	accept(";")
 	if symbol != ";":
 		nt_Condition()
+	accept(";")
 	if symbol != "{": #FOLLOW(ForClause)
 		nt_PostStmt()
 
@@ -318,20 +519,37 @@ def nt_RangeClause():
 	if symbol in set(string.ascii_letters+"_"):
 		nt_identifier()
 		after_identifier = True
- 	while symbol == ",":
-		accept(",")
-		after_identifier = False
-		if symbol in set(string.ascii_letters+"_"):
-			nt_identifier()
-			after_idetifier=True
- 	if symbol == ":=":
+	 	while symbol == "," and after_identifier:
+			accept(",")
+			after_identifier = False
+			if symbol in set(string.ascii_letters+"_"):
+				nt_identifier()
+				after_identifier=True
+ 	if symbol == ":=" and after_identifier:
 		accept(":=")
-	elif symbol == "=":
+	elif symbol == "=" and after_identifier:
 		accept("=")
 	elif symbol != "range":
 		if after_identifier:
-			nt_binary_op()
-		nt_ExpressionList()
+			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
+				accept("(")
+				nt_Expression()
+				if symbol==",":
+					nt_Expression()
+				accept(")")
+			while symbol=="." or symbol=="[":
+				if symbol==".":
+					nt_IndexOrSlice()
+				else:
+					nt_SelectorOrTypeAssertion()
+			if symbol==",":
+				accept(",")
+				nt_ExpressionList()
+			elif symbol != "=":
+				nt_binary_op()
+				nt_ExpressionList()
+		else:
+			nt_ExpressionList()
 		accept("=")
  	accept("range")
  	nt_Expression()
@@ -364,20 +582,20 @@ def nt_CommCase():
 	if symbol=="case":
 		accept("case")
 		after_identifier = False
+		isList = False
 		if symbol in set(string.ascii_letters+"_"):
 			nt_identifier()
 			after_identifier = True
 
-		isList = False
-		while symbol == ",":
-			accept(",")
-			isList = True
-			after_identifier = False
-			if symbol in set(string.ascii_letters+"_"):
-				nt_identifier()
-				after_idetifier=True
+			while symbol == "," and after_identifier:
+				accept(",")
+				isList = True
+				after_identifier = False
+				if symbol in set(string.ascii_letters+"_"):
+					nt_identifier()
+					after_identifier=True
 
-		if symbol == "<-" and not isList:
+		if symbol == "<-" and not isList and after_identifier:
 			accept("<-")	
 			nt_Expression()
 		elif symbol == ":=":
@@ -388,8 +606,22 @@ def nt_CommCase():
 			nt_RecvExpr()
 		else:
 			if after_identifier:
-				nt_binary_op()
-			nt_Expression()
+				if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
+					accept("(")
+					nt_Expression()
+					if symbol==",":
+						nt_Expression()
+					accept(")")
+				while symbol=="." or symbol=="[":
+					if symbol==".":
+						nt_IndexOrSlice()
+					else:
+						nt_SelectorOrTypeAssertion()
+				if symbol not in {",","="}:
+					nt_binary_op()
+					nt_Expression()
+			else:
+				nt_Expression()
 			if symbol == "<-":
 				accept("<-")
 				nt_Expression()
