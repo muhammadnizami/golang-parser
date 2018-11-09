@@ -566,8 +566,31 @@ def nt_FunctionLit():
 # <Index> ::= "[" Expression "]"
 # <Slice> ::= "[" [ Expression ] ":" [ Expression ] "]" | "[" [ Expression ] ":" Expression ":" Expression "]"
 # <TypeAssertion> ::= "." "(" Type ")"
-# TODO SelectorOrTypeAssertion
-# TODO IndexOrSlice
+def nt_SelectorOrTypeAssertion():
+	accept(".")
+	if symbol=="(":
+		accept("(")
+		nt_Type()
+		accept(")")
+	else:
+		nt_identifier()
+def nt_IndexOrSlice():
+	accept("[")
+	if symbol != ":":
+		nt_Expression()
+	if symbol=="]":
+		accept("]")
+	else:
+		accept(":")
+		if symbol !="]":
+			nt_Expression()
+		if symbol == "]":
+			accept("]")
+		else:
+			accept(":")
+			nt_Expression()
+			accept("]")
+
 # <Arguments> ::= "(" [ ( ExpressionList | Type [ "," ExpressionList ] ) [ "..." ] [ "," ] ] ")"
 #	NOT LL(1)
 
