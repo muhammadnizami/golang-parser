@@ -476,11 +476,52 @@ def nt_FunctionDecl():
 # <LiteralType> ::= StructType | ArrayType | "[" "..." "]" ElementType | SliceType | MapType | TypeName
 # <LiteralValue> ::= "{" [ ElementList [ "," ] ] "}"
 # <ElementList> ::= KeyedElement { "," KeyedElement }
+#	this one is implementation for both LiteralValue and ElementList
+#		<LiteralValue> ::= "{" [ KeyedElement { "," KeyedElement } "," ] "}"
+def nt_LiteralValue():
+	accept("{")
+	if symbol != "}":
+		nt_KeyedElement()
+		while symbol ==",":
+			accept(",")
+			if symbol != "}":
+				nt_KeyedElement()
+	accept("}")
+
 # <KeyedElement> ::= [ Key ":" ] Element
+#	Key and element is the same, so:
+def nt_KeyedElement():
+	nt_Element() #also works with key
+	if symbol==":":
+		accept(":")
+		nt_Element()
+
 # <Key> ::= FieldName | Expression | LiteralValue
+# not LL(1)
+# FieldName is also covered in Expression, so:
+def nt_Key():
+	if symbol != "{":
+		nt_Expression()
+	else:
+		nt_LiteralValue()
+
 # <FieldName> ::= identifier
+def nt_FieldName():
+	nt_identifier()
+
 # <Element> ::= Expression | LiteralValue
+def nt_Element():
+	if symbol!="{":
+		nt_Expression()
+	else:
+		nt_LiteralValue()
+
 # <FunctionLit> ::= "func" Signature FunctionBody
+def nt_FunctionLit():
+	accept("func")
+	nt_Signature()
+	nt_FunctionBody()
+
 # <PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
 #	FOLLOW(Selector) contains "." which is in FIRST(Selector)
 # also FOLLOW(TypeAssertion) is the same
@@ -491,9 +532,27 @@ def nt_FunctionDecl():
 # TODO SelectorOrTypeAssertion
 # TODO IndexOrSlice
 # <Arguments> ::= "(" [ ( ExpressionList | Type [ "," ExpressionList ] ) [ "..." ] [ "," ] ] ")"
+#	NOT LL(1)
+
 # <MethodExpr> ::= ReceiverType "." MethodName
+def nt_MethodExpr():
+	nt_ReceiverType()
+	accept(".")
+	nt_MethodName()
+
 # <ReceiverType> ::= Type
+def nt_ReceiverType():
+	nt_Type()
+
 # <Expression> ::= UnaryExpr | Expression binary_op Expression
+#	NOT LL(1)
+#	convert to: UnaryExpr { binary_op UnaryExpr }
+#	FOLLOW(Expression): ,;]):
+def Expression():
+	nt_UnaryExpr()
+	while symbol not in {",",";","}","]",")",":"}:
+		nt_UnaryExpr()
+
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
 def nt_UnaryExpr():
 	if symbol in nt_unary_op_set:
