@@ -64,7 +64,6 @@ def acceptset(Ts):
 # <hex_digit> ::= "0" … "9" | "A" … "F" | "a" … "f"
 
 # <identifier> ::= letter { letter | unicode_digit }
-
 def nt_identifier():
 	nt_letter()
 	while symbol in set(string.ascii_letters):
@@ -73,7 +72,6 @@ def nt_identifier():
 		nt_unicode_digit()
 
 # <int_lit> ::= decimal_lit | octal_lit | hex_lit
-
 def nt_int_lit():
 	if symbol in set(string.digits):
 		nt_decimal_lit()
@@ -83,7 +81,6 @@ def nt_int_lit():
 		nt_hex_lit()
 
 # <decimal_lit> ::= ( "1" … "9" ) { decimal_digit }
-
 def nt_decimal_lit():
 	if symbol == '1':
 		accept('1')
@@ -144,7 +141,7 @@ def nt_Type():
 		accept("(")
 		nt_Type()
 		accept(")")
-	elif symbol in set({"[","struct","*","func","interface","map","chan","<-"})
+	elif symbol in set({"[","struct","*","func","interface","map","chan","<-"}):
 		nt_TypeLit()
 	elif symbol in set(string.ascii_letters).union({"_"}):
 		nt_TypeName()
@@ -174,46 +171,298 @@ def nt_TypeLit():
 		nt_MapType()
 	else:
 		nt_ChannelType()
-		
+
 # <ArrayType> ::= "[" ArrayLength "]" ElementType
+def nt_ArrayType():
+	accept("[")
+	nt_ArrayLength()
+	accept("]")
+	nt_ElementType()
+
 # <ArrayLength> ::= Expression
+def nt_Expression():
+	nt_Expression()
+
 # <ElementType> ::= Type
+def nt_ElementType():
+	nt_Type()
+
 # <SliceType> ::= "[" "]" ElementType
+def nt_SliceType():
+	accept("[]")
+	nt_ElementType()
+
 # <StructType> ::= "struct" "{" { FieldDecl ";" } "}"
+def nt_StructType():
+	accept("struct")
+	accept("{")
+	while symbol in set(string.ascii_letters).union({"_"}):
+		nt_FieldDecl()
+		accept(";")
+	accept("}")
+
 # <FieldDecl> ::= (IdentifierList Type | EmbeddedField) [ Tag ]
+def nt_FieldDecl():
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_IdentifierList()
+		nt_Type()
+	elif symbol in set(string.ascii_letters).union({"_","*"}):
+		nt_EmbeddedField()
+	else:
+		output_error_and_halt()
+	
+	if symbol in set(string.ascii_letters):
+		nt_Tag()
+
 # <EmbeddedField> ::= [ "*" ] TypeName
+def nt_EmbeddedField():
+	if symbol == "*":
+		accept("*")
+	nt_TypeName()
+
 # <Tag> ::= string_lit
+def nt_Tag():
+	nt_string_lit()
+
 # <PointerType> ::= "*" BaseType
+def nt_PointerType():
+	accept("*")
+	nt_BaseType()
+
 # <BaseType> ::= Type
+def nt_BaseType():
+	nt_Type()
+
 # <FunctionType> ::= "func" Signature
+def nt_FunctionType():
+	accept("func")
+	nt_Signature()
+
 # <Signature> ::= Parameters [ Result ]
+def nt_Signature():
+	nt_Parameters()
+	if symbol in set(string.ascii_letters).union({"(","_"}):
+		nt_Result()
+
 # <Result> ::= Parameters | Type
+def nt_Result():
+	if symbol == "(":
+		nt_Parameters()
+	elif symbol in set(string.ascii_letters).union({"(","_"}):
+		nt_Type()
+
 # <Parameters> ::= "(" [ ParameterList [ "," ] ] ")"
+def nt_Parameters():
+	accept("(")
+	if symbol in set(string.ascii_letters).union({"(","_"}):
+		nt_ParameterList()
+		if symbol == ",":
+			accept(",")
+	accept(")")
+
 # <ParameterList> ::= ParameterDecl { "," ParameterDecl }
+def nt_ParameterList():
+	nt_ParameterDecl()
+	while symbol == ",":
+		accept(",")
+		nt_ParameterDecl
+
 # <ParameterDecl> ::= [ IdentifierList ] [ "..." ] Type
+def nt_ParameterDecl():
+	if symbol == set(string.ascii_letters).union({"_"}):
+		nt_IdentifierList()
+	if symbol == "...":
+		accept("...")
+	nt_Type()
+
 # <InterfaceType> ::= "interface" "{" { MethodSpec ";" } "}"
+def nt_InterfaceType():
+	accept("interface")
+	accept("{")
+	while symbol in set(string.ascii_letters).union({"_"}):
+		nt_MethodSpec()
+		accept(";")
+	accept("}")
+
 # <MethodSpec> ::= MethodName Signature | InterfaceTypeName
+def nt_MethodSpec():
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_MethodName()
+		nt_Signature()
+	elif symbol in set(string.ascii_letters).union({"_"}):
+		nt_InterfaceTypeName()
+
 # <MethodName> ::= identifier
+def nt_MethodName():
+	nt_identifier()
+
 # <InterfaceTypeName> ::= TypeName
+def nt_InterfaceType():
+	nt_TypeName()
+
 # <MapType> ::= "map" "[" KeyType "]" ElementType
+def nt_MapType():
+	accept("map")
+	accept("[")
+	nt_KeyType()
+	accept("]")
+	nt_ElementType()
+
 # <KeyType> ::= Type
+def nt_KeyType():
+	nt_Type()
+
 # <ChannelType> ::= ( "chan" | "chan" "<-" | "<-" "chan" ) ElementType
+def nt_ChannelType():
+	if symbol == "chan":
+		accept("chan")
+		if symbol == "<-":
+			accept("<-")
+	elif symbol == "<-":
+		accept == "<-"
+		accept == "chan"
+	else:
+		output_error_and_halt()
+
 # <Block> ::= "{" StatementList "}"
+def nt_Block():
+	accept("{")
+	nt_StatementList()
+	accept("}")
+
 # <StatementList> ::= { Statement ";" }
+def nt_StatementList():
+	while symbol in set(string.ascii_letters).union({"_"}):
+		nt_Statement()
+		accept(";")
+
 # <Declaration> ::= ConstDecl | TypeDecl | VarDecl
+def nt_Declaration():
+	if symbol == "const":
+		nt_ConstDecl()
+	elif symbol == "type":
+		nt_TypeDecl()
+	elif symbol == "var":
+		nt_VarDecl()
+
 # <TopLevelDecl> ::= Declaration | FunctionDecl | MethodDecl
+def nt_TopLevelDecl():
+	if symbol in set({"const", "type", "var"}):
+		nt_Declaration()
+	elif symbol == "func":
+		nt_FunctionDecl()
+	elif symbol == "func":
+		nt_MethodDecl()
+
 # <ConstDecl> ::= "const" ( ConstSpec | "(" { ConstSpec ";" } ")" )
+def nt_ConstDecl():
+	accept("const")
+	if symbol in set(string.ascii_letters).union({"_","("}):
+		if symbol == "(":
+			accept("(")
+			nt_ConstSpec()
+			accept(";")
+			accept(")")
+		else:
+			nt_ConstSpec()
+
 # <ConstSpec> ::= IdentifierList [ [ Type ] "::=" ExpressionList ]
+def nt_ConstSpec():
+	nt_IdentifierList()
+	if symbol in set(string.ascii_letters):
+		if symbol in set(string.ascii_letters):
+			nt_Type()
+		accept("::=")
+		nt_ExpressionList()
+	
 # <IdentifierList> ::= identifier { "," identifier }
+def nt_IdentifierList():
+	nt_identifier()
+	while symbol == ",":
+		accept(",")
+		nt_identifier
+
 # <ExpressionList> ::= Expression { "," Expression }
+def nt_ExpressionList():
+	nt_Expression()
+	while symbol == ",":
+		accept(",")
+		nt_Expression()
+		
 # <TypeDecl> ::= "type" ( TypeSpec | "(" { TypeSpec ";" } ")" )
+def nt_TypeDecl():
+	accept("type")
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_TypeSpec()
+	elif symbol == "(":
+		accept("(")
+		while symbol in set(string.ascii_letters).union({"_"}):
+			nt_TypeSpec()
+			accept(";")
+		accept(")")
+	else:
+		output_error_and_halt()
+
 # <TypeSpec> ::= AliasDecl | TypeDef
+def nt_TypeSpec():
+	if symbol in set(string.ascii_letters).union({"_"}):
+		nt_AliasDecl()
+	elif symbol in set({"(","[","struct","*","func","interface","map","chan","<-"}):
+		nt_TypeDef()
+	
 # <AliasDecl> ::= identifier "::=" Type
+def nt_AliasDecl():
+	nt_identifier()
+	accept("::=")
+	nt_Type()
+
 # <TypeDef> ::= identifier Type
+def nt_TypeDef():
+	nt_identifier()
+	nt_Type()
+
 # <VarDecl> ::= "var" ( VarSpec | "(" { VarSpec ";" } ")" )
+def nt_VarDecl():
+	accept("var")
+	if symbol == "(":
+		accept("(")
+		while symbol in set(string.ascii_letters).union({"_"}):
+			nt_VarSpec()
+			accept(";")
+		accept(")")
+	elif symbol in set(string.ascii_letters).union({"_"}):
+		nt_VarSpec()
+	else:
+		output_error_and_halt()
+
 # <VarSpec> ::= IdentifierList ( Type [ "::=" ExpressionList ] | "::=" ExpressionList )
+def nt_VarSpec():
+	nt_IdentifierList()
+	if symbol == "::=":
+		accept("::=")
+		nt_ExpressionList()
+	elif symbol in set(string.ascii_letters).union({"_"}):
+		nt_Type()
+		if symbol == "::=":
+			accept("::=")
+			nt_ExpressionList()
+	else:
+		output_error_and_halt()
+
 # <ShortVarDecl> ::= IdentifierList ":::=" ExpressionList
+def nt_ShortVarDecl():
+	nt_IdentifierList()
+	accept(":::=")
+	nt_ExpressionList()
+
 # <FunctionDecl> ::= "func" FunctionName Signature [ FunctionBody ]
+def nt_FunctionDecl():
+	accept("func")
+	nt_FunctionName()
+	nt_Signature()
+	if symbol == "{":
+		nt_FunctionBody()
+
 # <FunctionName> ::= identifier
 # <FunctionBody> ::= Block
 # <MethodDecl> ::= "func" Receiver MethodName Signature [ FunctionBody ]
