@@ -200,14 +200,88 @@ def nt_rune_lit():
 	else:
 		output_error_and_halt()
 	accept("'")
-# <unicode_value> ::= unicode_char | little_u_value | big_u_value | escaped_char
-# <byte_value> ::= octal_byte_value | hex_byte_value
-# <octal_byte_value> ::= `\` octal_digit octal_digit octal_digit
-# <hex_byte_value> ::= `\` "x" hex_digit hex_digit
-# <little_u_value> ::= `\` "u" hex_digit hex_digit hex_digit hex_digit
-# <big_u_value> ::= `\` "U" hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit
-# <escaped_char> ::= `\` ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | `\` | "'" | `"` )
 
+# <unicode_value> ::= unicode_char | little_u_value | big_u_value | escaped_char
+def nt_unicode_value():
+	if symbol != "\\":
+		nt_unicode_char()
+	else:
+		accept("//")
+		if symbol == "u":
+			nt_little_u_value()
+		elif symbol == "U":
+			nt_big_u_value()
+		else:
+			nt_escaped_char()
+
+# <byte_value> ::= octal_byte_value | hex_byte_value
+def nt_byte_value():
+	accept("\\")
+	if symbol == "x":
+		nt_hex_byte_value()
+	else:
+		nt_octal_byte_value()
+		
+# <octal_byte_value> ::= `\` octal_digit octal_digit octal_digit
+def nt_octal_byte_value():
+	nt_octal_digit()
+	nt_octal_digit()
+	nt_octal_digit()
+	
+# <hex_byte_value> ::= `\` "x" hex_digit hex_digit
+def nt_hex_byte_value():
+	accept("x")
+	nt_hex_digit()
+	nt_hex_digit()
+
+
+# <little_u_value> ::= `\` "u" hex_digit hex_digit hex_digit hex_digit
+def nt_little_u_value():
+	# accept('\\')
+	accept("u")
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	
+# <big_u_value> ::= `\` "U" hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit
+def nt_big_u_value():
+	# accept('\\')
+	accept("U")
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	
+
+# <escaped_char> ::= `\` ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | `\` | "'" | `"` )
+def nt_escaped_char():
+	# accept('\\')
+	if symbol == "a":
+		accept("a")
+	elif symbol == "b":
+		accept("b")
+	elif symbol == "f":
+		accept("f")
+	elif symbol == "n":
+		accept("n")
+	elif symbol == "r":
+		accept("r")
+	elif symbol == "t":
+		accept("t")
+	elif symbol == "v":
+		accept("v")
+	elif symbol == "\\":
+		accept("\\")
+	elif symbol == "'":
+		accept("'")
+	elif symbol == '"':
+		accept('"')
+	
 # <string_lit> ::= raw_string_lit | interpreted_string_lit
 def nt_string_lit():
 	if symbol == "'":
