@@ -55,9 +55,22 @@ def acceptset(Ts):
 #format: nt_<symbol_name>
 
 # <newline> ::= /* the Unicode code point U+000A */ 
+def nt_newline():
+	accept('\n')
+
 # <unicode_char> ::= /* an arbitrary Unicode code point except newline */ 
-# <unicode_letter> ::= /* a Unicode code point classified as "Letter" */ 
+def nt_unicode_char():
+	accept(symbol)
+
+# <unicode_letter> ::= /* a Unicode code point classified as "Letter" */
+def nt_unicode_letter():
+	if symbol in set(string.ascii_letters):
+		accept(symbol)
+
 # <unicode_digit> ::= /* a Unicode code point classified as "Number, decimal digit" */ 
+def nt_unicode_digit():
+	if symbol in set(string.digits):
+		accept(symbol)
 
 # <letter> ::= unicode_letter | "_"
 def nt_letter(): 
