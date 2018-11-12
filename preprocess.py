@@ -18,7 +18,11 @@ def preprocess(file):
 	is_in_string = False
 	for line in file:
 		last_nonwhitespace_i = None
-		for i in range(len(line)-1):
+		if line[len(line)-1] == '\n':
+			last = len(line)-1
+		else:
+			last = len(line)
+		for i in range(last):
 			if is_block_comment:
 				if i>0 and line[i-1:i+1] == '*/':
 					is_block_comment = False
