@@ -763,9 +763,9 @@ def nt_assign_op():
 	accept("=")
 
 # <IfStmt> ::= "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
-# 	FIRST(SimpleStmt) also contains FIRST(Expression)
-# 	<IfStmt> ::= "if" [ [ ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
-# 	<IfStmt> ::= "if" [ [ Expression [ "<-" Expression | "++" | "--" | { "," Expression } assign_op ExpressionList ] | IdentifierList ":::=" ExpressionList] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
+#	FIRST(SimpleStmt) also contains FIRST(Expression)
+#	<IfStmt> ::= "if" [ [ ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
+#	<IfStmt> ::= "if" [ [ Expression [ "<-" Expression | "++" | "--" | { "," Expression } assign_op ExpressionList ] | IdentifierList ":::=" ExpressionList] ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
 def nt_IfStmt():
 	accept("if")
 	if symbol in set(string.ascii_letters+"_"): #maybe identifierlist, maybe expression
@@ -883,7 +883,7 @@ def nt_ForStmt():
 	if symbol in set(string.ascii_letters+"_"):
 		nt_identifier()
 		after_identifier = True
-	 	while symbol == "," and after_identifier:
+		while symbol == "," and after_identifier:
 			accept(",")
 			isList=True
 			after_identifier = False
@@ -893,12 +893,12 @@ def nt_ForStmt():
 
 	if symbol == ":=" and after_identifier:
 		accept(":=")
-	 	accept("range")
-	 	nt_Expression()
+		accept("range")
+		nt_Expression()
 	elif symbol == "=" and after_identifier:
 		accept("=")
-	 	accept("range")
-	 	nt_Expression()
+		accept("range")
+		nt_Expression()
 	elif symbol != "{":
 		if after_identifier:
 			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
@@ -931,9 +931,9 @@ def nt_ForStmt():
 				nt_PostStmt()
 		if symbol=="=" or isList:
 			accept("=")
-		 	accept("range")
-		 	nt_Expression()
-	nt_Block() 	
+			accept("range")
+			nt_Expression()
+	nt_Block()	
 
 # <Condition> ::= Expression
 def nt_Condition():
@@ -962,13 +962,13 @@ def nt_RangeClause():
 	if symbol in set(string.ascii_letters+"_"):
 		nt_identifier()
 		after_identifier = True
-	 	while symbol == "," and after_identifier:
+		while symbol == "," and after_identifier:
 			accept(",")
 			after_identifier = False
 			if symbol in set(string.ascii_letters+"_"):
 				nt_identifier()
 				after_identifier=True
- 	if symbol == ":=" and after_identifier:
+	if symbol == ":=" and after_identifier:
 		accept(":=")
 	elif symbol == "=" and after_identifier:
 		accept("=")
@@ -994,8 +994,8 @@ def nt_RangeClause():
 		else:
 			nt_ExpressionList()
 		accept("=")
- 	accept("range")
- 	nt_Expression()
+	accept("range")
+	nt_Expression()
 
 # <GoStmt> ::= "go" Expression
 def nt_GoStmt():
