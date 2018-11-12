@@ -24,7 +24,7 @@ def output_error_and_halt():
 	#implement ouput error here
 	print("error")
 	print("NOT IMPLEMENTED YET")
-	SystemExit
+	raise SystemExit
 
 def main(filename):
 	#main program
