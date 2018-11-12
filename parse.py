@@ -55,13 +55,46 @@ def acceptset(Ts):
 #format: nt_<symbol_name>
 
 # <newline> ::= /* the Unicode code point U+000A */ 
+def nt_newline():
+	accept('\n')
+
 # <unicode_char> ::= /* an arbitrary Unicode code point except newline */ 
-# <unicode_letter> ::= /* a Unicode code point classified as "Letter" */ 
+def nt_unicode_char():
+	accept(symbol)
+
+# <unicode_letter> ::= /* a Unicode code point classified as "Letter" */
+def nt_unicode_letter():
+	if symbol in set(string.ascii_letters):
+		accept(symbol)
+
 # <unicode_digit> ::= /* a Unicode code point classified as "Number, decimal digit" */ 
+def nt_unicode_digit():
+	if symbol in set(string.digits):
+		accept(symbol)
+
 # <letter> ::= unicode_letter | "_"
+def nt_letter(): 
+	if symbol == "_":
+		accept("_")
+	elif symbol in set(string.ascii_letters):
+		accept(symbol)
+	
 # <decimal_digit> ::= "0" … "9"
+def nt_decimal_digit():
+	if symbol in set(string.unicode_digit):
+		accept(symbol)
+
 # <octal_digit> ::= "0" … "7"
+def nt_octal_digit():
+	if symbol in set(string.unicode_digit):
+		accept(symbol)
+
 # <hex_digit> ::= "0" … "9" | "A" … "F" | "a" … "f"
+def nt_hex_digit():
+	if symbol in set(string.unicode_digit):
+		accept(symbol)
+	elif symbol in set({"A","B","C","D","E","F","a","b","c","d","e","f"}):
+		accept(symbol)
 
 # <identifier> ::= letter { letter | unicode_digit }
 def nt_identifier():
@@ -107,11 +140,68 @@ def nt_decimal_lit():
 		nt_decimal_digit()
 	
 # <octal_lit> ::= "0" { octal_digit }
+def nt_octal_lit():
+	accept("0")
+	while symbol in set(string.octdigits):
+		nt_octal_digit()
+
 # <hex_lit> ::= "0" ( "x" | "X" ) hex_digit { hex_digit }
+def nt_hex_lit():
+	accept("0")
+	if symbol == "x":
+		accept("x")
+	elif symbol == "X":
+		accept("X")
+	else:
+		output_error_and_halt()
+	nt_hex_digit()
+	while symbol in set(string.hexdigits):
+		nt_hex_digit()
+
 # <float_lit> ::= decimals "." [ decimals ] [ exponent ] | decimals exponent | "." decimals [ exponent ]
+def nt_float_lit():
+	if symbol == ".":
+		accept(".")
+		nt_decimals()
+		if symbol in set({"e","E"}):
+			nt_exponent()
+	else:
+		nt_decimals()
+		accept(".")
+		if symbol in set(string.digits):
+			nt_decimals()
+		if symbol in set({"e","E"}):
+			nt_exponent()
+	
 # <decimals> ::= decimal_digit { decimal_digit }
+def nt_decimals():
+	nt_decimal_digit()
+	while symbol in set(string.digits):
+		nt_decimal_digit()
+
 # <exponent> ::= ( "e" | "E" ) [ "+" | "-" ] decimals
+def nt_exponent():
+	if symbol == "e":
+		accept("e")
+	elif symbol == "E":
+		accept("E")
+	else:
+		output_error_and_halt()
+
+	if symbol == "+":
+		accept("+")
+	elif symbol == "-":
+		accept("-")
+
+	nt_decimals()
+
 # <imaginary_lit> ::= (decimals | float_lit) "i"
+def nt_imaginary_lit():
+	if symbol in set(string.digits):
+		nt_decimals()
+	elif symbol == ".":
+		float_lit()
+	accept("i")
 
 # <rune_lit> ::= " ' " ( unicode_value | byte_value ) " ' "
 def nt_rune_lit():
@@ -123,17 +213,114 @@ def nt_rune_lit():
 	else:
 		output_error_and_halt()
 	accept("'")
-# <unicode_value> ::= unicode_char | little_u_value | big_u_value | escaped_char
-# <byte_value> ::= octal_byte_value | hex_byte_value
-# <octal_byte_value> ::= `\` octal_digit octal_digit octal_digit
-# <hex_byte_value> ::= `\` "x" hex_digit hex_digit
-# <little_u_value> ::= `\` "u" hex_digit hex_digit hex_digit hex_digit
-# <big_u_value> ::= `\` "U" hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit
-# <escaped_char> ::= `\` ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | `\` | "'" | `"` )
 
+# <unicode_value> ::= unicode_char | little_u_value | big_u_value | escaped_char
+def nt_unicode_value():
+	if symbol != "\\":
+		nt_unicode_char()
+	else:
+		accept("//")
+		if symbol == "u":
+			nt_little_u_value()
+		elif symbol == "U":
+			nt_big_u_value()
+		else:
+			nt_escaped_char()
+
+# <byte_value> ::= octal_byte_value | hex_byte_value
+def nt_byte_value():
+	accept("\\")
+	if symbol == "x":
+		nt_hex_byte_value()
+	else:
+		nt_octal_byte_value()
+		
+# <octal_byte_value> ::= `\` octal_digit octal_digit octal_digit
+def nt_octal_byte_value():
+	nt_octal_digit()
+	nt_octal_digit()
+	nt_octal_digit()
+	
+# <hex_byte_value> ::= `\` "x" hex_digit hex_digit
+def nt_hex_byte_value():
+	accept("x")
+	nt_hex_digit()
+	nt_hex_digit()
+
+
+# <little_u_value> ::= `\` "u" hex_digit hex_digit hex_digit hex_digit
+def nt_little_u_value():
+	# accept('\\')
+	accept("u")
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	
+# <big_u_value> ::= `\` "U" hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit hex_digit
+def nt_big_u_value():
+	# accept('\\')
+	accept("U")
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	nt_hex_digit()
+	
+
+# <escaped_char> ::= `\` ( "a" | "b" | "f" | "n" | "r" | "t" | "v" | `\` | "'" | `"` )
+def nt_escaped_char():
+	# accept('\\')
+	if symbol == "a":
+		accept("a")
+	elif symbol == "b":
+		accept("b")
+	elif symbol == "f":
+		accept("f")
+	elif symbol == "n":
+		accept("n")
+	elif symbol == "r":
+		accept("r")
+	elif symbol == "t":
+		accept("t")
+	elif symbol == "v":
+		accept("v")
+	elif symbol == "\\":
+		accept("\\")
+	elif symbol == "'":
+		accept("'")
+	elif symbol == '"':
+		accept('"')
+	
 # <string_lit> ::= raw_string_lit | interpreted_string_lit
+def nt_string_lit():
+	if symbol == "'":
+		nt_raw_string_lit()
+	elif symbol == '"':
+		nt_interpreted_string_lit()
 # <raw_string_lit> ::= "`" { unicode_char | newline } "`"
+def nt_raw_string_lit():
+	accept("'")
+	while symbol in set(string.ascii_letters).union({"\n"}):
+		if symbol == "\n":
+			nt_newline()
+		else:
+			nt_unicode_char()
+	accept('"')
+	accept("'")
+
 # <interpreted_string_lit> ::= `"` { unicode_value | byte_value } `"`
+def nt_interpreted_string_lit():
+	accept('"')
+	while symbol in set(string.ascii_letters).union({"\\"}):
+		if symbol == "\\":
+			nt_byte_value()
+		else:
+			nt_unicode_value()
+	accept('"')
 
 # <Type> ::= TypeName | TypeLit | "(" Type ")"
 def nt_Type():
@@ -880,14 +1067,14 @@ def nt_ForStmt():
 	accept("for")
 	after_identifier = False
 	isList=False
-	if symbol in set(string.ascii_letters+"_"):
+	if symbol in set(string.ascii_letters).union({"_"}):
 		nt_identifier()
 		after_identifier = True
 		while symbol == "," and after_identifier:
 			accept(",")
 			isList=True
 			after_identifier = False
-			if symbol in set(string.ascii_letters+"_"):
+			if symbol in set(string.ascii_letters).union({"_"}):
 				nt_identifier()
 				after_identifier=True
 
