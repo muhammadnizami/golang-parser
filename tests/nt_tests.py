@@ -1,6 +1,7 @@
 # coding: utf8
 
 import os,sys
+import traceback
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 from parse import *
@@ -18,11 +19,12 @@ def test_nt(nt_fun, input_file, should_halt):
 		else:
 			test_fail=True
 			print("FAIL: " + nt_fun.__name__ + " didn't halt as expected")
-	except SystemExit:
+	except SystemExit as e:
 		if should_halt:
 			print("SUCCESS: " + nt_fun.__name__ + " halted as expected")
 		else:
 			test_fail=True
+			traceback.print_exc()
 			print("FAIL: " + nt_fun.__name__ + " halted incorrectly")
 	except Exception as e:
 		print('Exception: ')
@@ -41,6 +43,7 @@ tests = [
 	(nt_identifier, 'input-files/identifier_2', False),
 	(nt_identifier, 'input-files/identifier_3', False),
 	(nt_identifier, 'input-files/identifier_4', False),
+	(nt_SourceFile, 'input-files/SourceFile_1', False)
 ]
 
 def main():

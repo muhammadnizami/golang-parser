@@ -23,7 +23,7 @@ def read_one_symbol():
 def output_error_and_halt():
 	#implement ouput error here
 	print("error")
-	print("NOT IMPLEMENTED YET")
+	print("symbol", symbol, "line_no", line_no, "column_no", column_no)
 	raise SystemExit
 
 def main(filename):
@@ -31,6 +31,7 @@ def main(filename):
 	open_symbolic_file(filename)
 	read_one_symbol()
 	#call start symbol
+	nt_SourceFile()
 	#output final
 
 #GRAMMAR IMPLEMENTATION HERE
@@ -81,17 +82,17 @@ def nt_letter():
 	
 # <decimal_digit> ::= "0" … "9"
 def nt_decimal_digit():
-	if symbol in set(string.unicode_digit):
+	if symbol in set(string.digits):
 		accept(symbol)
 
 # <octal_digit> ::= "0" … "7"
 def nt_octal_digit():
-	if symbol in set(string.unicode_digit):
+	if symbol in set(string.digits):
 		accept(symbol)
 
 # <hex_digit> ::= "0" … "9" | "A" … "F" | "a" … "f"
 def nt_hex_digit():
-	if symbol in set(string.unicode_digit):
+	if symbol in set(string.digits):
 		accept(symbol)
 	elif symbol in set({"A","B","C","D","E","F","a","b","c","d","e","f"}):
 		accept(symbol)
@@ -101,7 +102,7 @@ def nt_identifier():
 	nt_letter()
 	while symbol in set(string.ascii_letters):
 		nt_letter()
-	while symbol in set(string.unicode_digit):
+	while symbol in set(string.digits):
 		nt_unicode_digit()
 
 # <int_lit> ::= decimal_lit | octal_lit | hex_lit
@@ -452,11 +453,11 @@ def nt_ParameterList():
 	nt_ParameterDecl()
 	while symbol == ",":
 		accept(",")
-		nt_ParameterDecl
+		nt_ParameterDecl()
 
 # <ParameterDecl> ::= [ IdentifierList ] [ "..." ] Type
 def nt_ParameterDecl():
-	if symbol == set(string.ascii_letters).union({"_"}):
+	if symbol in set(string.ascii_letters).union({"_"}):
 		nt_IdentifierList()
 	if symbol == "...":
 		accept("...")
@@ -533,13 +534,18 @@ def nt_Declaration():
 		nt_VarDecl()
 
 # <TopLevelDecl> ::= Declaration | FunctionDecl | MethodDecl
+# change to:
+#	<TopLevelDecl> ::= Declaration | "func" ( MethodDecl | FunctionDecl )
+#	MethodDecl and FunctionDecl is also changed
 def nt_TopLevelDecl():
 	if symbol in set({"const", "type", "var"}):
 		nt_Declaration()
 	elif symbol == "func":
-		nt_FunctionDecl()
-	elif symbol == "func":
-		nt_MethodDecl()
+		accept("func")
+		if symbol == "(":
+			nt_MethodDecl()
+		elif symbol in set(string.ascii_letters).union({"_","("}):
+			nt_FunctionDecl()
 
 # <ConstDecl> ::= "const" ( ConstSpec | "(" { ConstSpec ";" } ")" )
 def nt_ConstDecl():
@@ -591,11 +597,13 @@ def nt_TypeDecl():
 		output_error_and_halt()
 
 # <TypeSpec> ::= AliasDecl | TypeDef
+# change to:
+#	<TypeSpec> ::= identifier [ "::=" ] Type
 def nt_TypeSpec():
-	if symbol in set(string.ascii_letters).union({"_"}):
-		nt_AliasDecl()
-	elif symbol in set({"(","[","struct","*","func","interface","map","chan","<-"}):
-		nt_TypeDef()
+	nt_identifier()
+	if symbol== "::=":
+		accept("::=")
+	nt_Type()
 	
 # <AliasDecl> ::= identifier "::=" Type
 def nt_AliasDecl():
@@ -643,8 +651,8 @@ def nt_ShortVarDecl():
 	nt_ExpressionList()
 
 # <FunctionDecl> ::= "func" FunctionName Signature [ FunctionBody ]
+# change to: <FunctionDecl> ::= "func" FunctionName Signature [ FunctionBody ]
 def nt_FunctionDecl():
-	accept("func")
 	nt_FunctionName()
 	nt_Signature()
 	if symbol == "{":
@@ -659,8 +667,8 @@ def nt_FunctionBody():
 	nt_Block()
 
 # <MethodDecl> ::= "func" Receiver MethodName Signature [ FunctionBody ]
-def MethodDecl():
-	accept("func")
+# change to: <MethodDecl> ::= Receiver MethodName Signature [ FunctionBody ]
+def nt_MethodDecl():
 	nt_Receiver()
 	nt_MethodName()
 	nt_Signature()
