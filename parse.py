@@ -368,7 +368,7 @@ def nt_ArrayType():
 	nt_ElementType()
 
 # <ArrayLength> ::= Expression
-def nt_Expression():
+def nt_ArrayLength():
 	nt_Expression()
 
 # <ElementType> ::= Type
@@ -532,6 +532,8 @@ def nt_Declaration():
 		nt_TypeDecl()
 	elif symbol == "var":
 		nt_VarDecl()
+	else:
+		output_error_and_halt()
 
 # <TopLevelDecl> ::= Declaration | FunctionDecl | MethodDecl
 # change to:
@@ -788,6 +790,7 @@ def nt_FunctionLit():
 def nt_PrimaryExpr():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
+		#TODO implement MethodExpr and Conversion
 	elif symbol=="(":
 		accept("(")
 		nt_Expression()
@@ -847,7 +850,7 @@ def nt_ReceiverType():
 #	NOT LL(1)
 #	convert to: UnaryExpr { binary_op UnaryExpr }
 #	FOLLOW(Expression): ,;]):
-def Expression():
+def nt_Expression():
 	nt_UnaryExpr()
 	while symbol not in {",",";","}","]",")",":"}:
 		nt_UnaryExpr()
@@ -904,12 +907,184 @@ def nt_Conversion():
 	accept(")")
 
 # <Statement> ::= Declaration | LabeledStmt | SimpleStmt | GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt | FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt | DeferStmt
-#	NOT LL(1)
+# change to: <Statement> ::= Declaration | LabeledStmtOrSimpleStmt | GoStmt | ReturnStmt | BreakStmt | ContinueStmt | GotoStmt | FallthroughStmt | Block | IfStmt | SwitchStmt | SelectStmt | ForStmt | DeferStmt
+def nt_Statement():
+	if symbol in set({"const", "type", "var"}):
+		nt_Declaration()
+	elif symbol=="go":
+		nt_GoStmt()
+	elif symbol=="return":
+		nt_ReturnStmt()
+	elif symbol=="break":
+		nt_BreakStmt()
+	elif symbol=="continue":
+		nt_ContinueStmt()
+	elif symbol=="goto":
+		nt_GotoStmt()
+	elif symbol=="fallthrough":
+		nt_FallthroughStmt()
+	elif symbol=="{":
+		nt_Block()
+	elif symbol=="if":
+		nt_IfStmt()
+	elif symbol=="switch":
+		nt_SwitchStmt()
+	elif symbol=="select":
+		nt_SelectStmt()
+	elif symbol=="for":
+		nt_ForStmt()
+	elif symbol=="defer":
+		nt_DeferStmt()
+	else:
+		nt_LabeledStmtOrSimpleStmt()
+
+# add new rule: <LabeledStmtOrSimpleStmt>
+def nt_LabeledStmtOrSimpleStmt():
+	if symbol in {";","{","}"}:
+		nt_EmptyStmt()
+	elif symbol in set(string.ascii_letters+"_"): #begins with identifier
+		nt_identifier()
+		if symbol==":": #LabeledStmt
+			accept(":")
+			nt_Statement()
+		else:
+			if symbol==",":
+				accept(",")
+				nt_IdentifierList()
+			if symbol == ":::=":
+				accept(":::=")
+				nt_ExpressionList()
+			else:
+				print("check",symbol)
+				statementFinished = False
+				#finish the expression
+				if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
+					accept("(")
+					nt_Expression()
+					if symbol==",":
+						nt_Expression()
+					accept(")")
+				while symbol=="." or symbol=="[":
+					if symbol==".":
+						nt_SelectorOrTypeAssertion()
+					else:
+						nt_IndexOrSlice()
+				if symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"}:
+					acceptset({",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"})
+					if symbol=="=":
+						accept("=")
+						nt_ExpressionList()
+						statementFinished=True
+					nt_ExpressionList()
+				elif symbol not in {",","++","--","<-","="}:
+					nt_binary_op()
+					nt_ExpressionList()
+
+				if symbol=="," and not statementFinished:
+					accept(",")
+					nt_ExpressionList()
+
+				#after that:
+				if symbol=="<-":
+					nt_Expression()
+				elif symbol=="++":
+					accept("++")
+				elif symbol=="--":
+					accept("--")
+				elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="} and not statementFinished:
+					if symbol==",":
+						accept(",")
+						nt_ExpressionList()
+					nt_assign_op()
+					nt_ExpressionList()
+	else: #begins with expression
+		# ExpressionStmt | SendStmt | IncDecStmt | Assignment
+		# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
+		nt_Expression()
+		if symbol=="<-":
+			nt_Expression()
+		elif symbol=="++":
+			accept("++")
+		elif symbol=="--":
+			accept("--")
+		elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
+			if symbol==",":
+				accept(",")
+				nt_ExpressionList()
+			nt_assign_op()
+			nt_ExpressionList()
+
 # <SimpleStmt> ::= EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl
 #	NOT LL(1)
+def nt_SimpleStmt():
+	if symbol in {";","{","}"}:
+		nt_EmptyStmt()
+	elif symbol in set(string.ascii_letters+"_"): #begins with identifier
+		nt_IdentifierList()
+		if symbol == ":::=":
+			accept(":::=")
+			nt_ExpressionList()
+		else:
+			statementFinished = False
+			#finish the expression
+			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
+				accept("(")
+				nt_Expression()
+				if symbol==",":
+					nt_Expression()
+				accept(")")
+			while symbol=="." or symbol=="[":
+				if symbol==".":
+					nt_SelectorOrTypeAssertion()
+				else:
+					nt_IndexOrSlice()
+			if symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"}:
+				acceptset({",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"})
+				if symbol=="=":
+					accept("=")
+					nt_ExpressionList()
+					statementFinished=True
+				nt_ExpressionList()
+			elif symbol not in {",","++","--","<-","="}:
+				nt_binary_op()
+				nt_ExpressionList()
+
+			if symbol=="," and not statementFinished:
+				accept(",")
+				nt_ExpressionList()
+
+			#after that:
+			if symbol=="<-":
+				nt_Expression()
+			elif symbol=="++":
+				accept("++")
+			elif symbol=="--":
+				accept("--")
+			elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="} and not statementFinished:
+				if symbol==",":
+					accept(",")
+					nt_ExpressionList()
+				nt_assign_op()
+				nt_ExpressionList()
+	else: #begins with expression
+		# ExpressionStmt | SendStmt | IncDecStmt | Assignment
+		# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
+		nt_Expression()
+		if symbol=="<-":
+			nt_Expression()
+		elif symbol=="++":
+			accept("++")
+		elif symbol=="--":
+			accept("--")
+		elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
+			if symbol==",":
+				accept(",")
+				nt_ExpressionList()
+			nt_assign_op()
+			nt_ExpressionList()
 
 # <EmptyStmt> ::=
-def EmptyStmt():
+def nt_EmptyStmt():
 	pass
 
 # <LabeledStmt> ::= Label ":" Statement
@@ -1177,9 +1352,9 @@ def nt_RangeClause():
 				accept(")")
 			while symbol=="." or symbol=="[":
 				if symbol==".":
-					nt_IndexOrSlice()
-				else:
 					nt_SelectorOrTypeAssertion()
+				else:
+					nt_IndexOrSlice()
 			if symbol==",":
 				accept(",")
 				nt_ExpressionList()
@@ -1280,6 +1455,7 @@ def nt_RecvExpr():
 
 # <ReturnStmt> ::= "return" [ ExpressionList ]
 def nt_ReturnStmt():
+	accept("return")
 	if symbol != ";":
 		nt_ExpressionList()
 
