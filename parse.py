@@ -693,7 +693,62 @@ def Operand():
 		nt_Literal()
 
 # <Literal> ::= BasicLit | CompositeLit | FunctionLit
+def nt_Literal():
+	if symbol in set(string.digits+".'`"+'"'):
+		nt_BasicLit()
+	elif symbol in {"struct","[","map"} + set(string.ascii_letters+'_'):
+		nt_CompositeLit()
+	elif symbol == "func":
+		nt_FunctionLit()
+	else:
+		output_error_and_halt()
 # <BasicLit> ::= int_lit | float_lit | imaginary_lit | rune_lit | string_lit
+# change to: <BasicLit> ::= numeric_lit | rune_lit | string_lit
+def nt_BasicLit():
+	if symbol in set(string.digits+"."):
+		nt_numeric_lit()
+	elif symbol=="'":
+		nt_rune_lit()
+	elif symbol in set('"`'):
+		nt_string_lit()
+	else:
+		output_error_and_halt()
+#	added rule: <numeric_lit> ::= 	decimal_lit [ "." [ decimals ] ] [ exponent ] |
+#									"0" ( ( "x" | "X" ) hex_digit { hex_digit } |
+#										{ decimal_digit } [ "." [ decimals ] ] [ exponent ] |
+#									"." decimals [ exponent ]
+#				(we assume that octal_digit is included in decimal_digit, although it might output "malformed integer")
+def nt_numeric_lit():
+	if symbol in set("123456789"):
+		nt_decimal_lit()
+		if symbol==".":
+			accept(".")
+			if symbol in set(string.digits):
+				nt_decimals()
+		if symbol in {"e","E"}:
+			nt_exponent()
+	elif symbol==0:
+		accept("0")
+		if symbol in {"x","X"}:
+			acceptset({"x","X"})
+			nt_hex_digit()
+			while symbol in set(string.hexdigits):
+				nt_hex_digit()
+		else:
+			while symbol in set(string.digits):
+				nt_decimal_digit()
+			if symbol==".":
+				accept(".")
+				if symbol in set(string.digits):
+					nt_decimals()
+			if symbol in {"e","E"}:
+				nt_exponent()
+	elif symbol==".":
+		nt_decimals()
+		if symbol in {"e","E"}:
+			nt_exponent()		
+	else:
+		output_error_and_halt()
 # <OperandName> ::= identifier | QualifiedIdent.
 # NOT LL(1)
 # change to: <OperandName> ::= identifier [ "." identifier] 
@@ -791,7 +846,7 @@ def nt_PrimaryExpr():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
 		#TODO implement MethodExpr and Conversion
-	elif symbol=="(":
+	elif symbol=="(": #TODO fix this. parentheses can also mean Type
 		accept("(")
 		nt_Expression()
 		accept(")")
@@ -834,7 +889,47 @@ def nt_IndexOrSlice():
 			accept("]")
 
 # <Arguments> ::= "(" [ ( ExpressionList | Type [ "," ExpressionList ] ) [ "..." ] [ "," ] ] ")"
-#	NOT LL(1)
+def nt_Arguments():
+	accept("(")
+	count_openparentheses=0
+	while symbol=="(": #possible Type
+		accept("(")
+		count_openparentheses+=1
+	if symbol in set({"[","struct","*","func","interface","map","chan","<-"}): #definitely Type
+		nt_Type()
+		while count_openparentheses>0:
+			accept(")")
+			count_openparentheses-=1
+	else:
+		nt_Expression() #TypeName is included
+		while count_openparentheses>0:
+			accept(")")
+			count_openparentheses-=1
+			#remember:
+			#	<PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
+			while symbol in {".", "[", "("}:
+					if symbol==".":
+						nt_SelectorOrTypeAssertion()
+					elif symbol=="[":
+						nt_IndexOrSlice()
+					else: #symbol=="("
+						# Arguments, also includes conversion
+						nt_Arguments()
+			#	<Expression> ::= UnaryExpr | Expression binary_op Expression
+			if symbol != ")":
+				nt_binary_op()
+				nt_Expression()
+
+	while symbol==",":
+		# cannot use ExpressionList because of possible final ","
+		accept(",")
+		if symbol != ")":
+			nt_Expression()
+	if symbol=="...":
+		accept("...")
+	if symbol==",":
+		accept(",")
+	accept(")")
 
 # <MethodExpr> ::= ReceiverType "." MethodName
 def nt_MethodExpr():
@@ -958,17 +1053,15 @@ def nt_LabeledStmtOrSimpleStmt():
 				print("check",symbol)
 				statementFinished = False
 				#finish the expression
-				if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
-					accept("(")
-					nt_Expression()
-					if symbol==",":
-						nt_Expression()
-					accept(")")
-				while symbol=="." or symbol=="[":
+				while symbol in {".", "[", "("}:
 					if symbol==".":
 						nt_SelectorOrTypeAssertion()
-					else:
+					elif symbol=="[":
 						nt_IndexOrSlice()
+					else: #symbol=="("
+						# Arguments, also includes conversion
+						nt_Arguments()
+
 				if symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"}:
 					acceptset({",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"})
 					if symbol=="=":
