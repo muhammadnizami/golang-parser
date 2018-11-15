@@ -8,6 +8,7 @@ file = None
 symbol = None
 line_no = None
 column_no = None
+prev_isspace = False
 
 #helper
 def open_symbolic_file(filename):
@@ -17,8 +18,8 @@ def open_symbolic_file(filename):
 	file = symbol_read.read_symbols(file)
 
 def read_one_symbol():
-	global symbol, line_no, column_no
-	symbol, line_no, column_no = next(file)
+	global symbol, line_no, column_no, prev_isspace
+	symbol, line_no, column_no, prev_isspace = next(file)
 
 def output_error_and_halt():
 	#implement ouput error here
@@ -89,6 +90,8 @@ def nt_letter():
 		accept("_")
 	elif symbol in set(string.ascii_letters):
 		accept(symbol)
+	else:
+		output_error_and_halt()
 	
 # <decimal_digit> ::= "0" … "9"
 def nt_decimal_digit():
@@ -110,10 +113,11 @@ def nt_hex_digit():
 # <identifier> ::= letter { letter | unicode_digit }
 def nt_identifier():
 	nt_letter()
-	while symbol in set(string.ascii_letters):
-		nt_letter()
-	while symbol in set(string.digits):
-		nt_unicode_digit()
+	while symbol in set(string.ascii_letters+string.digits+"_") and not prev_isspace:
+		if symbol in set(string.ascii_letters+"_"):
+			nt_letter()
+		elif symbol in set(string.digits):
+			nt_unicode_digit()
 
 # <int_lit> ::= decimal_lit | octal_lit | hex_lit
 def nt_int_lit():
@@ -648,7 +652,7 @@ def nt_VarSpec():
 	if symbol == "::=":
 		accept("::=")
 		nt_ExpressionList()
-	elif symbol in set(string.ascii_letters).union({"_"}):
+	elif symbol in set(string.ascii_letters).union({"_","(","[","struct","*","func","interface","map","chan","<-"}):
 		nt_Type()
 		if symbol == "::=":
 			accept("::=")
@@ -963,7 +967,7 @@ def nt_Expression():
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
 def nt_UnaryExpr():
 	if symbol in nt_unary_op_set:
-		unary_op()
+		nt_unary_op()
 	else:
 		nt_PrimaryExpr()
 
@@ -1060,7 +1064,6 @@ def nt_LabeledStmtOrSimpleStmt():
 				accept(":::=")
 				nt_ExpressionList()
 			else:
-				print("check",symbol)
 				statementFinished = False
 				#finish the expression
 				while symbol in {".", "[", "("}:
