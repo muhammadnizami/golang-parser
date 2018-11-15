@@ -724,7 +724,7 @@ def Operand():
 def nt_Literal():
 	if symbol in set(string.digits+".'`"+'"'):
 		nt_BasicLit()
-	elif symbol in {"struct","[","map"} + set(string.ascii_letters+'_'):
+	elif symbol in {"struct","[","map"}.union(set(string.ascii_letters+'_')):
 		nt_CompositeLit()
 	elif symbol == "func":
 		nt_FunctionLit()
@@ -881,11 +881,14 @@ def nt_PrimaryExpr():
 	else:
 		nt_Literal()
 
-	while symbol in {".","["}:
+	while symbol in {".", "[", "("}:
 		if symbol==".":
 			nt_SelectorOrTypeAssertion()
-		else:
+		elif symbol=="[":
 			nt_IndexOrSlice()
+		else: #symbol=="("
+			# Arguments, also includes conversion
+			nt_Arguments()
 # also FOLLOW(TypeAssertion) is the same
 # <Selector> ::= "." identifier
 # <Index> ::= "[" Expression "]"
@@ -919,44 +922,45 @@ def nt_IndexOrSlice():
 # <Arguments> ::= "(" [ ( ExpressionList | Type [ "," ExpressionList ] ) [ "..." ] [ "," ] ] ")"
 def nt_Arguments():
 	accept("(")
-	count_openparentheses=0
-	while symbol=="(": #possible Type
-		accept("(")
-		count_openparentheses+=1
-	if symbol in set({"[","struct","*","func","interface","map","chan","<-"}): #definitely Type
-		nt_Type()
-		while count_openparentheses>0:
-			accept(")")
-			count_openparentheses-=1
-	else:
-		nt_Expression() #TypeName is included
-		while count_openparentheses>0:
-			accept(")")
-			count_openparentheses-=1
-			#remember:
-			#	<PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
-			while symbol in {".", "[", "("}:
-					if symbol==".":
-						nt_SelectorOrTypeAssertion()
-					elif symbol=="[":
-						nt_IndexOrSlice()
-					else: #symbol=="("
-						# Arguments, also includes conversion
-						nt_Arguments()
-			#	<Expression> ::= UnaryExpr | Expression binary_op Expression
-			if symbol != ")":
-				nt_binary_op()
-				nt_Expression()
+	if symbol != ")":
+		count_openparentheses=0
+		while symbol=="(": #possible Type
+			accept("(")
+			count_openparentheses+=1
+		if symbol in set({"[","struct","*","func","interface","map","chan","<-"}): #definitely Type
+			nt_Type()
+			while count_openparentheses>0:
+				accept(")")
+				count_openparentheses-=1
+		else:
+			nt_Expression() #TypeName is included
+			while count_openparentheses>0:
+				accept(")")
+				count_openparentheses-=1
+				#remember:
+				#	<PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
+				while symbol in {".", "[", "("}:
+						if symbol==".":
+							nt_SelectorOrTypeAssertion()
+						elif symbol=="[":
+							nt_IndexOrSlice()
+						else: #symbol=="("
+							# Arguments, also includes conversion
+							nt_Arguments()
+				#	<Expression> ::= UnaryExpr | Expression binary_op Expression
+				if symbol != ")":
+					nt_binary_op()
+					nt_Expression()
 
-	while symbol==",":
-		# cannot use ExpressionList because of possible final ","
-		accept(",")
-		if symbol != ")":
-			nt_Expression()
-	if symbol=="...":
-		accept("...")
-	if symbol==",":
-		accept(",")
+		while symbol==",":
+			# cannot use ExpressionList because of possible final ","
+			accept(",")
+			if symbol != ")":
+				nt_Expression()
+		if symbol=="...":
+			accept("...")
+		if symbol==",":
+			accept(",")
 	accept(")")
 
 # <MethodExpr> ::= ReceiverType "." MethodName
@@ -1153,11 +1157,14 @@ def nt_SimpleStmt():
 				if symbol==",":
 					nt_Expression()
 				accept(")")
-			while symbol=="." or symbol=="[":
+			while symbol in {".", "[", "("}:
 				if symbol==".":
 					nt_SelectorOrTypeAssertion()
-				else:
+				elif symbol=="[":
 					nt_IndexOrSlice()
+				else: #symbol=="("
+					# Arguments, also includes conversion
+					nt_Arguments()
 			if symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"}:
 				acceptset({",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^"})
 				if symbol=="=":
@@ -1434,11 +1441,14 @@ def nt_ForStmt():
 				if symbol==",":
 					nt_Expression()
 				accept(")")
-			while symbol=="." or symbol=="[":
-				if symbol=="[":
-					nt_IndexOrSlice()
-				else:
+			while symbol in {".", "[", "("}:
+				if symbol==".":
 					nt_SelectorOrTypeAssertion()
+				elif symbol=="[":
+					nt_IndexOrSlice()
+				else: #symbol=="("
+					# Arguments, also includes conversion
+					nt_Arguments()
 			if symbol not in {",",";","="}:
 				nt_binary_op()
 				nt_Expression()
@@ -1500,17 +1510,14 @@ def nt_RangeClause():
 		accept("=")
 	elif symbol != "range":
 		if after_identifier:
-			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
-				accept("(")
-				nt_Expression()
-				if symbol==",":
-					nt_Expression()
-				accept(")")
-			while symbol=="." or symbol=="[":
+			while symbol in {".", "[", "("}:
 				if symbol==".":
 					nt_SelectorOrTypeAssertion()
-				else:
+				elif symbol=="[":
 					nt_IndexOrSlice()
+				else: #symbol=="("
+					# Arguments, also includes conversion
+					nt_Arguments()
 			if symbol==",":
 				accept(",")
 				nt_ExpressionList()
@@ -1575,17 +1582,14 @@ def nt_CommCase():
 			nt_RecvExpr()
 		else:
 			if after_identifier:
-				if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
-					accept("(")
-					nt_Expression()
-					if symbol==",":
-						nt_Expression()
-					accept(")")
-				while symbol=="." or symbol=="[":
+				while symbol in {".", "[", "("}:
 					if symbol==".":
-						nt_IndexOrSlice()
-					else:
 						nt_SelectorOrTypeAssertion()
+					elif symbol=="[":
+						nt_IndexOrSlice()
+					else: #symbol=="("
+						# Arguments, also includes conversion
+						nt_Arguments()
 				if symbol not in {",","="}:
 					nt_binary_op()
 					nt_Expression()
