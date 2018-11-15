@@ -1259,8 +1259,44 @@ def nt_assign_op():
 def nt_IfStmt():
 	accept("if")
 	if symbol in set(string.ascii_letters+"_"): #maybe identifierlist, maybe expression
-		pass
-		#TODO implement this
+		nt_identifier()
+		if symbol=="," or symbol==":::=" : #obviously identifierList
+			if symbol==",":
+				accept(",")
+				nt_IdentifierList()
+			accept(":::=")
+			nt_ExpressionList()
+			acceptsemicolon()
+			nt_Expression()
+		else:
+			while symbol in {".", "[", "("}:
+				if symbol==".":
+					nt_SelectorOrTypeAssertion()
+				elif symbol=="[":
+					nt_IndexOrSlice()
+				else: #symbol=="("
+					# Arguments, also includes conversion
+					nt_Arguments()
+			#	<Expression> ::= UnaryExpr | Expression binary_op Expression
+			if symbol not in {"<-", "++", "--", ",", ";", "{"}:
+				nt_binary_op()
+				nt_Expression()
+			if symbol!="{":
+				if symbol== "<-":
+					accept("<-")
+					nt_Expression()
+				elif symbol=="++":
+					accept("++")
+				elif symbol=="--":
+					accept("--")
+				elif symbol=="," or symbol in {"+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
+					while symbol==",":
+						nt_Expression()
+					nt_assign_op()
+					nt_ExpressionList()
+				acceptsemicolon()
+				nt_Expression()
+
 	elif symbol != ";":
 		nt_Expression()
 		if symbol!="{":
@@ -1278,13 +1314,13 @@ def nt_IfStmt():
 				nt_ExpressionList()
 			acceptsemicolon()
 			nt_Expression()
-		nt_Block()
-		if symbol=="else":
-			accept("else")
-			if symbol=="if":
-				nt_IfStmt()
-			else:
-				nt_Block()
+	nt_Block()
+	if symbol=="else":
+		accept("else")
+		if symbol=="if":
+			nt_IfStmt()
+		else:
+			nt_Block()
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
