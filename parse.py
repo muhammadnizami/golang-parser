@@ -234,7 +234,7 @@ def nt_unicode_value():
 	if symbol != "\\":
 		nt_unicode_char()
 	else:
-		accept("//")
+		accept("\\")
 		if symbol == "u":
 			nt_little_u_value()
 		elif symbol == "U":
@@ -244,7 +244,6 @@ def nt_unicode_value():
 
 # <byte_value> ::= octal_byte_value | hex_byte_value
 def nt_byte_value():
-	accept("\\")
 	if symbol == "x":
 		nt_hex_byte_value()
 	else:
@@ -328,14 +327,29 @@ def nt_raw_string_lit():
 	accept("'")
 
 # <interpreted_string_lit> ::= `"` { unicode_value | byte_value } `"`
+#	THIS IS NOT LL(1)
+#	change to: <interpreted_string_lit> ::= `"` { unicode_or_byte_value } `"`
 def nt_interpreted_string_lit():
 	accept('"')
-	while symbol in set(string.ascii_letters).union({"\\"}):
-		if symbol == "\\":
-			nt_byte_value()
-		else:
-			nt_unicode_value()
+	while symbol != '"':
+		nt_unicode_or_byte_value()
 	accept('"')
+
+# added a new rule:
+#	<unicode_or_byte_value> ::= unicode_char | "\\" ( little_u_value | big_u_value | escaped_char | byte_value )
+def nt_unicode_or_byte_value():
+	if symbol!="\\":
+		nt_unicode_char()
+	else:
+		accept("\\")
+		if symbol=="u":
+			nt_little_u_value()
+		elif symbol=="U":
+			nt_big_u_value()
+		elif symbol in {"a", "b", "f", "n", "r","t", "v", "\\", "'", '"' }:
+			nt_escaped_char()
+		else:
+			nt_byte_value()
 
 # <Type> ::= TypeName | TypeLit | "(" Type ")"
 def nt_Type():
