@@ -1069,7 +1069,7 @@ def nt_LabeledStmtOrSimpleStmt():
 						nt_ExpressionList()
 						statementFinished=True
 					nt_ExpressionList()
-				elif symbol not in {",","++","--","<-","="}:
+				elif symbol not in {",","++","--","<-","=",";","}"}:
 					nt_binary_op()
 					nt_ExpressionList()
 
@@ -1138,7 +1138,7 @@ def nt_SimpleStmt():
 					nt_ExpressionList()
 					statementFinished=True
 				nt_ExpressionList()
-			elif symbol not in {",","++","--","<-","="}:
+			elif symbol not in {",","++","--","<-","=",";","}"}:
 				nt_binary_op()
 				nt_ExpressionList()
 
