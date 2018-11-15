@@ -46,6 +46,7 @@ def read_symbols(preprocessed_characters):
 				else:
 					yield from flush_characters(charbuffer, l, prev_isspace)
 					charbuffer = []
+					prev_isspace = c.isspace()
 				if c.isspace():
 					token_type_candidate = ''
 					prev_isspace=True
