@@ -520,7 +520,7 @@ def nt_Block():
 
 # <StatementList> ::= { Statement ";" }
 def nt_StatementList():
-	while symbol in set(string.ascii_letters).union({"_"}):
+	while symbol in set(string.ascii_letters).union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"	}):
 		nt_Statement()
 		accept(";")
 
