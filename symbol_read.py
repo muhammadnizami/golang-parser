@@ -123,7 +123,7 @@ def read_symbols(preprocessed_characters):
 		if len(charbuffer)==0:
 			prev_isspace = c.isspace()
 
-	yield ';',None,None,False
+	yield ';',"last","last",False
 
 def flush_characters(charbuffer,l,prev_isspace):
 
