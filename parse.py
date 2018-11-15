@@ -37,7 +37,6 @@ def main(filename):
 #GRAMMAR IMPLEMENTATION HERE
 # |  |  |  |
 # v  v  v  v
-
 def accept(T):
 	global symbol
 	if T == symbol:
@@ -51,6 +50,17 @@ def acceptset(Ts):
 		read_one_symbol()
 	else:
 		output_error_and_halt()
+
+def acceptsemicolon():
+	#this is to abide to the specification's semicolon ignorance rule no. 2:
+	#	To allow complex statements to occupy a single line, a semicolon may be omitted before a closing ")" or "}".
+	global symbol
+	if T==";":
+		read_one_symbol()
+	elif symbol!="}":
+		output_error_and_halt()
+
+
 
 #all nonterminal symbols
 #format: nt_<symbol_name>
@@ -386,7 +396,7 @@ def nt_StructType():
 	accept("{")
 	while symbol in set(string.ascii_letters).union({"_"}):
 		nt_FieldDecl()
-		accept(";")
+		acceptsemicolon()
 	accept("}")
 
 # <FieldDecl> ::= (IdentifierList Type | EmbeddedField) [ Tag ]
@@ -469,7 +479,7 @@ def nt_InterfaceType():
 	accept("{")
 	while symbol in set(string.ascii_letters).union({"_"}):
 		nt_MethodSpec()
-		accept(";")
+		acceptsemicolon()
 	accept("}")
 
 # <MethodSpec> ::= MethodName Signature | InterfaceTypeName
@@ -522,7 +532,7 @@ def nt_Block():
 def nt_StatementList():
 	while symbol in set(string.ascii_letters).union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"	}):
 		nt_Statement()
-		accept(";")
+		acceptsemicolon()
 
 # <Declaration> ::= ConstDecl | TypeDecl | VarDecl
 def nt_Declaration():
@@ -556,7 +566,7 @@ def nt_ConstDecl():
 		if symbol == "(":
 			accept("(")
 			nt_ConstSpec()
-			accept(";")
+			acceptsemicolon()
 			accept(")")
 		else:
 			nt_ConstSpec()
@@ -593,7 +603,7 @@ def nt_TypeDecl():
 		accept("(")
 		while symbol in set(string.ascii_letters).union({"_"}):
 			nt_TypeSpec()
-			accept(";")
+			acceptsemicolon()
 		accept(")")
 	else:
 		output_error_and_halt()
@@ -625,7 +635,7 @@ def nt_VarDecl():
 		accept("(")
 		while symbol in set(string.ascii_letters).union({"_"}):
 			nt_VarSpec()
-			accept(";")
+			acceptsemicolon()
 		accept(")")
 	elif symbol in set(string.ascii_letters).union({"_"}):
 		nt_VarSpec()
@@ -1249,7 +1259,7 @@ def nt_IfStmt():
 					nt_Expression()
 				nt_assign_op()
 				nt_ExpressionList()
-			accept(";")
+			acceptsemicolon()
 			nt_Expression()
 		nt_Block()
 		if symbol=="else":
@@ -1386,10 +1396,10 @@ def nt_ForStmt():
 			isList=True
 			nt_ExpressionList()
 		elif symbol==";" and not isList: #ForClause
-			accept(";")
+			acceptsemicolon()
 			if symbol != ";":
 				nt_Condition()
-			accept(";")
+			acceptsemicolon()
 			if symbol != "{": #FOLLOW(ForClause)
 				nt_PostStmt()
 		if symbol=="=" or isList:
@@ -1406,10 +1416,10 @@ def nt_Condition():
 def nt_ForClause():
 	if symbol != ";":
 		nt_InitStmt()
-	accept(";")
+	acceptsemicolon()
 	if symbol != ";":
 		nt_Condition()
-	accept(";")
+	acceptsemicolon()
 	if symbol != "{": #FOLLOW(ForClause)
 		nt_PostStmt()
 
@@ -1582,13 +1592,13 @@ def nt_DeferStmt():
 # <SourceFile> ::= PackageClause ";" { ImportDecl ";" } { TopLevelDecl ";" }
 def nt_SourceFile():
 	nt_PackageClause()
-	accept(";")
+	acceptsemicolon()
 	while symbol=="import":
 		nt_ImportDecl()
-		accept(";")
+		acceptsemicolon()
 	while symbol in {"const","type","var","func"}:
 		nt_TopLevelDecl()
-		accept(";")
+		acceptsemicolon()
 
 # <PackageClause> ::= "package" PackageName
 def nt_PackageClause():
@@ -1608,7 +1618,7 @@ def nt_ImportDecl():
 		accept("(")
 		while symbol in set(string.ascii_letters).union({"_",".","`",'"'}):
 			nt_ImportSpec()
-			accept(";")
+			acceptsemicolon()
 		accept(")")
 	else:
 		output_error_and_halt()
