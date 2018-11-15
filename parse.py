@@ -55,7 +55,7 @@ def acceptsemicolon():
 	#this is to abide to the specification's semicolon ignorance rule no. 2:
 	#	To allow complex statements to occupy a single line, a semicolon may be omitted before a closing ")" or "}".
 	global symbol
-	if T==";":
+	if symbol==";":
 		read_one_symbol()
 	elif symbol!="}":
 		output_error_and_halt()
