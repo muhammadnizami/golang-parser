@@ -1428,20 +1428,18 @@ def nt_SwitchStmt():
 			nt_identifier()
 			if symbol==":=": #this one is obvious
 				accept(":=")
-				nt_PrimaryExpr()
-				accept(".")
-				accept("(")
-				accept("case")
-				accept(")")
-				isTypeSwitchStmt = True
+				if symbol in nt_unary_op_set:
+					nt_ExpressionList()
+					isTypeSwitchStmt = False
+				else:
+					nt_PrimaryExprFront()
+					isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
 			else:
 				#might be SimpleStmt or Expression or PrimaryExpr
 				isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
 
 		else: #might be SimpleStmt or PrimaryExpr
-			if symbol==";":
-				accept(";")
-			else: #might be SimpleStmt that begins with Expression; or PrimaryExpr
+			if symbol!=";": #might be SimpleStmt that begins with Expression; or PrimaryExpr
 				if symbol in nt_unary_op_set: #obviously not PrimaryExpr
 					# ExpressionStmt | SendStmt | IncDecStmt | Assignment
 					# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
@@ -1449,7 +1447,7 @@ def nt_SwitchStmt():
 					isSurelyStmt = symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}
 					nt_SimpleStmtRhs()
 					if isSurelyStmt or symbol==";":
-						accept(";")
+						acceptsemicolon()
 						if symbol=="{":
 							isTypeSwitchStmt=False
 						else:
@@ -1463,6 +1461,8 @@ def nt_SwitchStmt():
 						#if PrimaryExpr, cannot use nt_PrimaryExpr() because there is "." "(" "type" ")" after
 					nt_PrimaryExprFront()
 					isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
+		if symbol==";" and not isTypeSwitchStmt:
+			acceptsemicolon()
 	else:
 		isTypeSwitchStmt = False
 	accept("{")
@@ -1482,6 +1482,7 @@ def tryParseUntilTypeSwitchGuard():
 			if symbol=="(":
 				accept("(")
 				if symbol=="type":
+					accept("type")
 					isTypeSwitchGuard=True
 				else:
 					nt_Type()
@@ -1494,7 +1495,7 @@ def tryParseUntilTypeSwitchGuard():
 			# Arguments, also includes conversion
 			nt_Arguments()
 	if not isTypeSwitchGuard:
-		if symbol != "{":
+		if symbol in nt_binary_op_set:
 			nt_binary_op()
 			nt_Expression()
 	return isTypeSwitchGuard
