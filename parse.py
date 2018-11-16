@@ -87,7 +87,7 @@ def acceptsemicolon():
 	global symbol
 	if symbol==";":
 		read_one_symbol()
-	elif symbol!="}" or symbol != ")":
+	elif symbol!="}" and symbol != ")":
 		output_error_and_halt()
 
 
