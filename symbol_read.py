@@ -56,7 +56,7 @@ def read_symbols(preprocessed_characters):
 				elif c in op_chars:
 					token_type_candidate = 'op'
 					charbuffer = charbuffer+[(c,col)]
-				elif c in ['"',"'"]:
+				elif c in ['"',"'","`"]:
 					yield c, l, col, prev_isspace
 					token_type_candidate = c
 				else:
@@ -70,7 +70,7 @@ def read_symbols(preprocessed_characters):
 			elif c in op_chars:
 				token_type_candidate = 'op'
 				charbuffer = charbuffer+[(c,col)]
-			elif c in ['"',"'"]:
+			elif c in ['"',"'","`"]:
 				yield c, l, col, prev_isspace
 				token_type_candidate = c
 			else:
@@ -90,13 +90,13 @@ def read_symbols(preprocessed_characters):
 				elif c in '_':
 					yield c, l, col, prev_isspace
 					token_type_candidate = 'id'
-				elif c in ['"',"'"]:
+				elif c in ['"',"'","`"]:
 					yield c, l, col, prev_isspace
 					token_type_candidate = c
 				else:
 					yield c, l, col, prev_isspace
 					token_type_candidate = ''
-		elif token_type_candidate in ['"',","]:
+		elif token_type_candidate in ['"',"'","`"]:
 			if c is token_type_candidate:
 				if count_string_backslash % 2 == 0:
 					token_type_candidate = ''
@@ -114,7 +114,7 @@ def read_symbols(preprocessed_characters):
 				token_type_candidate = 'op'
 			elif c is '_':
 				yield c, l, col, prev_isspace
-			elif c in ['"', ","]:
+			elif c in ['"',"'","`"]:
 				yield c, l, col, prev_isspace
 				token_type_candidate = c
 			elif not c.isspace():
@@ -169,8 +169,9 @@ if __name__ =='__main__':
 		symbol_generator = read_symbols(preprocess_generator)
 		prev_line_number = 1
 		for symbol,line_number,col_number,prev_isspace in symbol_generator:
-			for i in range(prev_line_number,line_number):
-				print('')
+			if line_number!='last':
+				for i in range(prev_line_number,line_number):
+					print('')
 			if prev_isspace:
 				print('<space>',end='')
 			print(symbol,end='|')
