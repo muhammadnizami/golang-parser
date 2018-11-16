@@ -41,6 +41,157 @@ func sieve() {
 	}
 }
 
+func min(x int, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+
+
+func (p *Point) Length() float64 {
+	return math.Sqrt(p.x * p.x + p.y * p.y)
+
+	// list of prime numbers
+	primes := []int{2, 3, 5, 7, 9, 2147483647}
+
+
+	// error here
+	// vowels[ch] is true if ch is a vowel
+	vowels := [128]bool{'a': true, 'e': true, 'i': true, 'o': true, 'u': true, 'y': true}
+
+	// the array [10]float32{-1, 0, 0, 0, -0.1, -0.1, 0, 0, 0, -1}
+	filter := [10]float32{-1, 4: -0.1, -0.1, 9: -1}
+
+	// frequencies in Hz for equal-tempered scale (A4 = 440Hz)
+	noteFrequency := map[string]float32{
+		"C0": 16.35, "D0": 18.35, "E0": 20.60, "F0": 21.83,
+		"G0": 24.50, "A0": 27.50, "B0": 30.87,
+	}
+
+
+
+	//error here
+	buffer := [10]string{}             // len(buffer) == 10
+	intSet := [6]int{1, 2, 3, 5}       // len(intSet) == 6
+	days := [...]string{"Sat", "Sun"} 
+}
+
+ 
+
+
+//error here
+var pointer *Point3D = &Point3D{y: 1000}
+
+
+func (p *Point) Scale(factor float64) {
+	p.x *= factor
+	p.y *= factor
+
+	//error here
+	origin := Point3D{}                            // zero value for Point3D
+	line := Line{origin, Point3D{y: -4, z: 12.3}}
+}
+
+  
+
+//error here
+type Point3D struct { x, y, z float64 }
+type Line struct { p, q Point3D }
+
+
+// error here
+func flushICache(begin, end uintptr)  // implemented externally
+
+
+func IndexRune(s string, r rune) int {
+	for i, c := range s {
+		if c == r {
+			return i
+		}
+	}
+	// invalid: missing return statement
+}
+
+
+func varss(){
+
+	field1, offset := nextField(str, 0)
+	field2, offset := nextField(str, offset)  // redeclares offset
+	a, a := 1, 2                              
+
+	i, j := 0, 10
+	//error here
+	f := func() int { return 7 }
+	ch := make(chan int)
+	r, w := os.Pipe(fd)  // os.Pipe() returns two values
+	_, y, _ := coord(p)  // coord() returns three values; only interested in y coordinate
+
+	var d = math.Sin(0.5)  // d is float64
+	var i = 42             // i is int
+	var t, ok = x.(T)      // t is T, ok is bool
+	var n = nil            // illegal
+
+
+	var i int
+	//error here
+	var U, V, W float64
+	var k = 0
+	var x, y float32 = -1, -2
+	var (
+		i       int
+		u, v, s = 2.0, 3.0, "bar"
+	)
+	var re, im = complexSqrt(-1)
+	var _, found = entries[name]  // map lookup; only interested in "found"
+
+}
+
+type TimeZone int
+
+const (
+	EST TimeZone = -(5 + iota)
+	//error here
+	CST
+	MST
+	PST
+)
+
+func (tz TimeZone) String() string {
+	return fmt.Sprintf("GMT%+dh", tz)
+}
+
+
+func types2(){
+	type (
+	/// error here
+	Point struct{ x, y float64 }  // Point and struct{ x, y float64 } are different types
+	polar Point                   // polar and Point denote different types
+	)
+
+	type TreeNode struct {
+		left, right *TreeNode
+		value *Comparable
+	}
+
+	type Block interface {
+		BlockSize() int
+		Encrypt(src, dst []byte)
+		Decrypt(src, dst []byte)
+	}
+
+}
+
+/// error issued
+func types(){
+	type (
+		nodeList = []*Node  // nodeList and []*Node are identical types
+		Polar    = polar    // Polar and polar denote identical types
+	)
+
+}
+
 func literals() {
 	42
 	0600
@@ -78,6 +229,14 @@ func literals() {
 }
 
 func iota(){
+
+	const (
+	bit0, mask0 = 1 << iota, 1<<iota - 1  // bit0 == 1, mask0 == 0  (iota == 0)
+	bit1, mask1                           // bit1 == 2, mask1 == 1  (iota == 1)
+	_, _                                  //                        (iota == 2, unused)
+	bit3, mask3                           // bit3 == 8, mask3 == 7  (iota == 3)
+	)
+
 	const (
 	c0 = iota  // c0 == 0
 	c1 = iota  // c1 == 1
