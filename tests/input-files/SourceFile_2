@@ -41,6 +41,15 @@ func sieve() {
 	}
 }
 
+/// error issued
+func types(){
+	type (
+		nodeList = []*Node  // nodeList and []*Node are identical types
+		Polar    = polar    // Polar and polar denote identical types
+	)
+
+}
+
 func literals() {
 	42
 	0600
@@ -68,6 +77,14 @@ func literals() {
 }
 
 func iota(){
+
+	const (
+	bit0, mask0 = 1 << iota, 1<<iota - 1  // bit0 == 1, mask0 == 0  (iota == 0)
+	bit1, mask1                           // bit1 == 2, mask1 == 1  (iota == 1)
+	_, _                                  //                        (iota == 2, unused)
+	bit3, mask3                           // bit3 == 8, mask3 == 7  (iota == 3)
+	)
+
 	const (
 	c0 = iota  // c0 == 0
 	c1 = iota  // c1 == 1
