@@ -871,7 +871,7 @@ def nt_FunctionLit():
 # <PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
 #	FOLLOW(Selector) contains "." which is in FIRST(Selector)
 #	<PrimaryExpr> ::= ( identifier | Literal | "(" Expression ")" ) { SelectorOrTypeAssertion | IndexOrSlice }
-def nt_PrimaryExpr():
+def nt_PrimaryExprFront():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
 	elif symbol=="(":
@@ -909,7 +909,8 @@ def nt_PrimaryExpr():
 
 	else:
 		nt_Literal()
-
+def nt_PrimaryExpr():
+	nt_PrimaryExprFront()
 	while symbol in {".", "[", "("}:
 		if symbol==".":
 			nt_SelectorOrTypeAssertion()
@@ -1391,14 +1392,25 @@ def nt_IfStmt():
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
 # change to: <SwitchStmt> ::= "switch" [ SimpleStmt ";" ] ( [ Expression ] "{" { ExprCaseClause } "}" | TypeSwitchGuard "{" { TypeCaseClause } "}" )
-#	<SwitchStmt> ::= "switch" [ SimpleStmt ";" ] ( "{" { ExprCaseClause } | ( Expression "{" ExprCaseClause | [ identifier ":=" ] PrimaryExpr "." "(" "type" ")" "{" TypeCaseClause )) "}"
+#	<SwitchStmt> ::= "switch" [ SimpleStmt ";" ] ( "{" { ExprCaseClause } | ( Expression "{" ExprCaseClause | [ identifier ":=" ] PrimaryExpr "." "(" "type" ")" "{" { TypeCaseClause } )) "}"
 def nt_SwitchStmt():
 	accept("switch")
 
 	if symbol != "{":
 		if symbol in set(string.ascii_letters+"_"): #might be identifier
 			nt_identifier()
-			#TODO
+			if symbol==":=": #this one is obvious
+				accept(":=")
+				nt_PrimaryExpr()
+				accept(".")
+				accept("(")
+				accept("case")
+				accept(")")
+				isTypeSwitchStmt = True
+			else:
+				#might be SimpleStmt or Expression or PrimaryExpr
+				isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
+
 		else: #might be SimpleStmt or PrimaryExpr
 			if symbol==";":
 				accept(";")
@@ -1407,24 +1419,69 @@ def nt_SwitchStmt():
 					# ExpressionStmt | SendStmt | IncDecStmt | Assignment
 					# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
 					nt_Expression()
+					isSurelyStmt = symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}
 					if symbol=="<-":
 						nt_Expression()
 					elif symbol=="++":
 						accept("++")
 					elif symbol=="--":
 						accept("--")
-					while symbol != "}":
-						nt_ExprCaseClause()
+					elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
+						if symbol==",":
+							accept(",")
+							nt_ExpressionList()
+						nt_assign_op()
+						nt_ExpressionList()
+					if isSurelyStmt or symbol==";":
+						accept(";")
+						if symbol=="{":
+							isTypeSwitchStmt=False
+						else:
+							#might be Expression, or PrimaryExpr
+							nt_PrimaryExprFront()
+							isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
+					else:
+						isTypeSwitchStmt=False
 
 				else: #PrimaryExpr or PrimaryExpr binary_op Expression
 						#if PrimaryExpr, cannot use nt_PrimaryExpr() because there is "." "(" "type" ")" after
-						#TODO fix this
-					pass
-
+					nt_PrimaryExprFront()
+					isTypeSwitchStmt = tryParseUntilTypeSwitchGuard()
+	else:
+		isTypeSwitchStmt = False
+	accept("{")
+	if isTypeSwitchStmt:
+		while symbol != "}":
+			nt_TypeCaseClause()
 	else:
 		while symbol != "}":
 			nt_ExprCaseClause()
 	accept("}")
+
+def tryParseUntilTypeSwitchGuard():
+	isTypeSwitchGuard=False
+	while symbol in {".", "[", "("} and not isTypeSwitchGuard:
+		if symbol==".":
+			accept(".")
+			if symbol=="(":
+				accept("(")
+				if symbol=="type":
+					isTypeSwitchGuard=True
+				else:
+					nt_Type()
+				accept(")")
+			else:
+				nt_identifier()
+		elif symbol=="[":
+			nt_IndexOrSlice()
+		else: #symbol=="("
+			# Arguments, also includes conversion
+			nt_Arguments()
+	if not isTypeSwitchGuard:
+		if symbol != "{":
+			nt_binary_op()
+			nt_Expression()
+	return isTypeSwitchGuard
 
 # <ExprSwitchStmt> ::= "switch" [ SimpleStmt ";" ] [ Expression ] "{" { ExprCaseClause } "}"
 def nt_ExprSwitchStmt():
