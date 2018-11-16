@@ -1801,6 +1801,8 @@ def nt_SourceFile():
 	while symbol in {"const","type","var","func"}:
 		nt_TopLevelDecl()
 		acceptsemicolon()
+	if symbol != ';':
+		output_error_and_halt()
 
 # <PackageClause> ::= "package" PackageName
 def nt_PackageClause():
