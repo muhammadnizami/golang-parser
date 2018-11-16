@@ -611,11 +611,12 @@ def nt_TopLevelDecl():
 # <ConstDecl> ::= "const" ( ConstSpec | "(" { ConstSpec ";" } ")" )
 def nt_ConstDecl():
 	accept("const")
-	if symbol in set(string.ascii_letters).union({"_","("}):
+	if symbol in set(string.ascii_letters+"_").union({"_","("}):
 		if symbol == "(":
 			accept("(")
-			nt_ConstSpec()
-			acceptsemicolon()
+			while symbol in set(string.ascii_letters+"_"):
+				nt_ConstSpec()
+				acceptsemicolon()
 			accept(")")
 		else:
 			nt_ConstSpec()
@@ -623,8 +624,8 @@ def nt_ConstDecl():
 # <ConstSpec> ::= IdentifierList [ [ Type ] "=" ExpressionList ]
 def nt_ConstSpec():
 	nt_IdentifierList()
-	if symbol in set(string.ascii_letters):
-		if symbol in set(string.ascii_letters):
+	if symbol in set(string.ascii_letters+"_=").union({"(","[","struct","*","func","interface","map","chan","<-"}):
+		if symbol in set(string.ascii_letters+"_").union({"(","[","struct","*","func","interface","map","chan","<-"}):
 			nt_Type()
 		accept("=")
 		nt_ExpressionList()
