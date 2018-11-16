@@ -82,7 +82,7 @@ func (p *Point) Length() float64 {
 
 
 //error here
-//var pointer *Point3D = &Point3D{y: 1000}
+var pointer *Point3D = &Point3D{y: 1000}
 
 
 func (p *Point) Scale(factor float64) {
@@ -90,8 +90,8 @@ func (p *Point) Scale(factor float64) {
 	p.y *= factor
 
 	//error here
-	//origin := Point3D{}                            // zero value for Point3D
-	//line := Line{origin, Point3D{y: -4, z: 12.3}}
+	origin := Point3D{}                            // zero value for Point3D
+	line := Line{origin, Point3D{y: -4, z: 12.3}}
 }
 
   

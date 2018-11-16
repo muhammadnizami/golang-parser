@@ -668,11 +668,11 @@ def nt_IdentifierList():
 		nt_identifier()
 
 # <ExpressionList> ::= Expression { "," Expression }
-def nt_ExpressionList():
-	nt_Expression()
+def nt_ExpressionList(mightFollowBlock=False):
+	nt_Expression(mightFollowBlock)
 	while symbol == ",":
 		accept(",")
-		nt_Expression()
+		nt_Expression(mightFollowBlock)
 		
 # <TypeDecl> ::= "type" ( TypeSpec | "(" { TypeSpec ";" } ")" )
 def nt_TypeDecl():
@@ -939,9 +939,11 @@ def nt_FunctionLit():
 #	Literal can be CompositeLit, which can be LiteralType LiteralValue
 #	LiteralType can be TypeName, which is identifier | QualifiedIdent
 #					CompositeLit is skipped for now
-def nt_PrimaryExprFront():
+def nt_PrimaryExprFront(mightFollowBlock=False):
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
+		if symbol=="{" and not mightFollowBlock:
+			nt_LiteralValue()
 	elif symbol in {"(","[","struct","*","interface","map","chan"}:
 		count_openparentheses = 0
 		while symbol=="(":
@@ -1009,8 +1011,8 @@ def nt_PrimaryExprRepeat():
 			# Arguments, also includes conversion
 			nt_Arguments()
 
-def nt_PrimaryExpr():
-	nt_PrimaryExprFront()
+def nt_PrimaryExpr(mightFollowBlock=False):
+	nt_PrimaryExprFront(mightFollowBlock)
 	nt_PrimaryExprRepeat()
 # also FOLLOW(TypeAssertion) is the same
 # <Selector> ::= "." identifier
@@ -1136,19 +1138,19 @@ def nt_ReceiverType():
 #	NOT LL(1)
 #	convert to: UnaryExpr { binary_op UnaryExpr }
 #	FOLLOW(Expression): ,;]):
-def nt_Expression():
-	nt_UnaryExpr()
+def nt_Expression(mightFollowBlock=False):
+	nt_UnaryExpr(mightFollowBlock)
 	while symbol in nt_binary_op_set:
 		nt_binary_op()
-		nt_UnaryExpr()
+		nt_UnaryExpr(mightFollowBlock)
 
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
-def nt_UnaryExpr():
+def nt_UnaryExpr(mightFollowBlock=False):
 	if symbol in nt_unary_op_set:
 		nt_unary_op()
-		nt_UnaryExpr()
+		nt_UnaryExpr(mightFollowBlock)
 	else:
-		nt_PrimaryExpr()
+		nt_PrimaryExpr(mightFollowBlock)
 
 # <binary_op> ::= "||" | "&&" | rel_op | add_op | mul_op
 def nt_binary_op():
@@ -1283,14 +1285,14 @@ def nt_LabeledStmtOrSimpleStmt():
 
 # <SimpleStmt> ::= EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl
 #	NOT LL(1)
-def nt_SimpleStmt():
+def nt_SimpleStmt(mightFollowBlock=False):
 	if symbol in {";","{","}"}:
 		nt_EmptyStmt()
 	elif symbol in set(string.ascii_letters+"_"): #begins with identifier
 		nt_IdentifierList()
 		if symbol == ":=":
 			accept(":=")
-			nt_ExpressionList()
+			nt_ExpressionList(mightFollowBlock)
 		else:
 			statementFinished = False
 			#finish the expression
@@ -1314,17 +1316,17 @@ def nt_SimpleStmt():
 					accept("=")
 					nt_ExpressionList()
 					statementFinished=True
-				nt_ExpressionList()
+				nt_ExpressionList(mightFollowBlock=True)
 			elif symbol not in {",","++","--","<-","=",";","}"}:
 				nt_binary_op()
-				nt_ExpressionList()
+				nt_ExpressionList(mightFollowBlock=True)
 
 			if symbol=="," and not statementFinished:
 				accept(",")
-				nt_ExpressionList()
+				nt_ExpressionList(mightFollowBlock=True)
 
 			#after that:
-			nt_SimpleStmtRhs(statementFinished)
+			nt_SimpleStmtRhs(statementFinished,mightFollowBlock=True)
 	else: #begins with expression
 		# ExpressionStmt | SendStmt | IncDecStmt | Assignment
 		# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
@@ -1394,7 +1396,7 @@ def nt_IfStmt():
 			accept(":=")
 			nt_ExpressionList()
 			acceptsemicolon()
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 		else:
 			while symbol in {".", "[", "("}:
 				if symbol==".":
@@ -1407,19 +1409,19 @@ def nt_IfStmt():
 			#	<Expression> ::= UnaryExpr | Expression binary_op Expression
 			if symbol not in {"<-", "++", "--", ",", ";", "{"}:
 				nt_binary_op()
-				nt_Expression()
+				nt_Expression(mightFollowBlock=True)
 			if symbol!="{":
 				nt_SimpleStmtRhs()
 
 	elif symbol == ";":
 		acceptsemicolon()
-		nt_Expression()
+		nt_Expression(mightFollowBlock=True)
 	else:
-		nt_Expression()
+		nt_Expression(mightFollowBlock=True)
 		if symbol!="{":
 			nt_SimpleStmtRhs()
 			acceptsemicolon()
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 	nt_Block()
 	if symbol=="else":
 		accept("else")
@@ -1428,7 +1430,7 @@ def nt_IfStmt():
 		else:
 			nt_Block()
 
-def nt_SimpleStmtRhs(statementFinished=False):
+def nt_SimpleStmtRhs(statementFinished=False,mightFollowBlock=False):
 	stmtdone = False
 	while not stmtdone and symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}.union(nt_binary_op_set) and symbol!=";":
 		if symbol=="<-":
@@ -1450,7 +1452,7 @@ def nt_SimpleStmtRhs(statementFinished=False):
 			elif symbol in nt_assign_op_set:
 				nt_assign_op()
 				stmtdone=True
-			nt_ExpressionList()
+			nt_ExpressionList(mightFollowBlock)
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
@@ -1632,7 +1634,7 @@ def nt_ForStmt():
 		accept(":=")
 		if symbol=="range":
 			accept("range")
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 		else:
 			nt_ExpressionList()
 			acceptsemicolon()
@@ -1645,7 +1647,7 @@ def nt_ForStmt():
 		accept("=")
 		if symbol=="range":
 			accept("range")
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 		else:
 			nt_Expression()
 			acceptsemicolon()
@@ -1668,13 +1670,13 @@ def nt_ForStmt():
 					nt_Arguments()
 			if symbol not in {",",";","="}:
 				nt_binary_op()
-				nt_Expression()
+				nt_Expression(mightFollowBlock=True)
 		else:
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 		if symbol==",":
 			accept(",")
 			isList=True
-			nt_ExpressionList()
+			nt_ExpressionList(mightFollowBlock=True)
 		elif symbol==";" and not isList: #ForClause
 			acceptsemicolon()
 			if symbol != ";":
@@ -1685,7 +1687,7 @@ def nt_ForStmt():
 		if symbol=="=" or isList:
 			accept("=")
 			accept("range")
-			nt_Expression()
+			nt_Expression(mightFollowBlock=True)
 	nt_Block()	
 
 # <Condition> ::= Expression
@@ -1708,7 +1710,7 @@ def nt_InitStmt():
 	nt_SimpleStmt()
 # <PostStmt> ::= SimpleStmt
 def nt_PostStmt():
-	nt_SimpleStmt()
+	nt_SimpleStmt(mightFollowBlock=True)
 # <RangeClause> ::= [ ExpressionList "=" | IdentifierList ":=" ] "range" Expression
 def nt_RangeClause():
 	after_identifier = False
@@ -1745,7 +1747,7 @@ def nt_RangeClause():
 			nt_ExpressionList()
 		accept("=")
 	accept("range")
-	nt_Expression()
+	nt_Expression(mightFollowBlock=True)
 
 # <GoStmt> ::= "go" Expression
 def nt_GoStmt():
