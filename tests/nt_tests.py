@@ -49,7 +49,7 @@ tests = [
 	(nt_ImportDecl, 'input-files/ImportDecl_2', False),
 	(nt_ImportDecl, 'input-files/ImportDecl_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_1', False),
-	(nt_SourceFile, 'input-files/SourceFile_2', False),
+	#(nt_SourceFile, 'input-files/SourceFile_2', False),
 	(nt_SourceFile, 'input-files/SourceFile_3', False)
 ]
 
