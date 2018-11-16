@@ -37,7 +37,5 @@ func main() {
 	default:
 		print("no communication\n")
 	}
-
-
 }
 
