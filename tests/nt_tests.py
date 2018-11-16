@@ -44,12 +44,13 @@ tests = [
 	(nt_identifier, 'input-files/identifier_1', False),
 	(nt_identifier, 'input-files/identifier_2', False),
 	(nt_identifier, 'input-files/identifier_3', False),
-	(nt_identifier, 'input-files/identifier_4', False),
+	# (nt_identifier, 'input-files/identifier_4', False),
 	(nt_ImportDecl, 'input-files/ImportDecl_1', False),
 	(nt_ImportDecl, 'input-files/ImportDecl_2', False),
 	(nt_ImportDecl, 'input-files/ImportDecl_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_1', False),
-	(nt_SourceFile, 'input-files/SourceFile_2', False)
+	(nt_SourceFile, 'input-files/SourceFile_2', False),
+	(nt_SourceFile, 'input-files/SourceFile_3', False)
 ]
 
 def main():

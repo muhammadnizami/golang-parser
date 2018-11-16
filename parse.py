@@ -87,7 +87,7 @@ def acceptsemicolon():
 	global symbol
 	if symbol==";":
 		read_one_symbol()
-	elif symbol!="}":
+	elif symbol!="}" or symbol != ")":
 		output_error_and_halt()
 
 
@@ -620,13 +620,13 @@ def nt_ConstDecl():
 		else:
 			nt_ConstSpec()
 
-# <ConstSpec> ::= IdentifierList [ [ Type ] "::=" ExpressionList ]
+# <ConstSpec> ::= IdentifierList [ [ Type ] "=" ExpressionList ]
 def nt_ConstSpec():
 	nt_IdentifierList()
 	if symbol in set(string.ascii_letters):
 		if symbol in set(string.ascii_letters):
 			nt_Type()
-		accept("::=")
+		accept("=")
 		nt_ExpressionList()
 	
 # <IdentifierList> ::= identifier { "," identifier }
