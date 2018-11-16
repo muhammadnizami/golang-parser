@@ -1,0 +1,33 @@
+package main
+
+type error interface {
+	Error() string
+}
+
+type ArbitraryType int  // shorthand for an arbitrary Go type; it is not a real type
+type Pointer *ArbitraryType
+
+func Alignof(variable ArbitraryType) uintptr
+func Offsetof(selector ArbitraryType) uintptr
+func Sizeof(variable ArbitraryType) uintptr
+
+
+func Read(f *File, b []byte) (n int, err error)
+
+
+
+func blabla(){
+    var f float64
+    bits = *(*uint64)(unsafe.Pointer(&f))
+
+    bits = *(*uint64)(ptr(&f))
+
+    var p ptr = nil
+
+    uintptr(unsafe.Pointer(&s)) + unsafe.Offsetof(s.f) == uintptr(unsafe.Pointer(&s.f))
+
+    uintptr(unsafe.Pointer(&x)) % unsafe.Alignof(x) == 0
+
+    //error here
+    type ptr unsafe.Pointer
+}
