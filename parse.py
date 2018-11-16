@@ -870,7 +870,6 @@ def nt_LiteralType():
 			accept("]")
 			nt_ElementType()
 		else:
-			accept("[")
 			nt_ArrayLength()
 			accept("]")
 			nt_ElementType()
