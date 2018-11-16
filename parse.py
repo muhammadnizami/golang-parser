@@ -609,7 +609,7 @@ def nt_Block():
 
 # <StatementList> ::= { Statement ";" }
 def nt_StatementList():
-	while symbol in set(string.ascii_letters+'.').union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"}).union(nt_unary_op_set).union(nt_literal_first_set):
+	while symbol in set(string.ascii_letters+'.').union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"}).union(nt_unary_op_set).union(nt_literal_first_set).union({"("}):
 		nt_Statement()
 		acceptsemicolon()
 
