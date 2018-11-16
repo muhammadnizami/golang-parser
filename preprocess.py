@@ -42,7 +42,7 @@ def preprocess(file):
 						count_backslash = count_backslash + 1
 					if count_backslash % 2 == 0:
 						is_in_string = False
-				elif line[i] in ['"', "'"] and not is_in_string:
+				elif line[i] in ['"', "'", "`"] and not is_in_string:
 					is_in_string = line[i]
 		if last_nonwhitespace_i is not None and not is_in_string:
 			if line_needs_semicolon(line,last_nonwhitespace_i):
@@ -56,7 +56,7 @@ def preprocess(file):
 
 #helper functions
 import string
-semicolon_indicator_chars = list(string.ascii_letters)+list(string.digits)+[')',']','}','_','"',"'",";"]
+semicolon_indicator_chars = list(string.ascii_letters)+list(string.digits)+[')',']','}','_','"',"'","`",";"]
 
 def line_needs_semicolon(line, last_nonwhitespace_i):
 	if last_token_is_semicolonless_keyword(line,last_nonwhitespace_i):
