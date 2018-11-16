@@ -49,26 +49,12 @@ tests = [
 	(nt_ImportDecl, 'input-files/ImportDecl_2', False),
 	(nt_ImportDecl, 'input-files/ImportDecl_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_1', False),
-<<<<<<< HEAD
 	(nt_SourceFile, 'input-files/SourceFile_2', False),
 	(nt_SourceFile, 'input-files/SourceFile_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_4', False),
 	(nt_SourceFile, 'input-files/SourceFile_5', False),
-	(nt_SourceFile, 'input-files/SourceFile_10', True)
-
-||||||| merged common ancestors
-	#(nt_SourceFile, 'input-files/SourceFile_2', False),
-	# (nt_SourceFile, 'input-files/SourceFile_3', False),
-	# (nt_SourceFile, 'input-files/SourceFile_4', False),
-	(nt_SourceFile, 'input-files/SourceFile_5', False)
-=======
-	#(nt_SourceFile, 'input-files/SourceFile_2', False),
-	# (nt_SourceFile, 'input-files/SourceFile_3', False),
-	# (nt_SourceFile, 'input-files/SourceFile_4', False),
-	# (nt_SourceFile, 'input-files/SourceFile_5', False),
 	(nt_SourceFile, 'input-files/SourceFile_6', False),
-
->>>>>>> new issue
+	(nt_SourceFile, 'input-files/SourceFile_10', True)
 ]
 
 def main():
