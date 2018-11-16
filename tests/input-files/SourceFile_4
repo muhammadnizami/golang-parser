@@ -1,0 +1,131 @@
+package main
+
+func conversion() {
+
+
+
+    switch tag {
+    default: s3()
+    case 0, 1, 2, 3: s1()
+    case 4, 5, 6, 7: s2()
+    }
+
+
+    switch {
+    case x < y: f1()
+    case x < z: f2()
+    case x == 4: f3()
+    }
+    
+    //error
+    switch x.(type) {
+    // cases
+    }
+
+    //error here
+    switch x := f(); {  // missing switch expression means "true"
+    case x < 0: return -x
+    default: return x
+    }
+
+
+
+    if x := f(); x < y {
+        return x
+    } else if x > z {
+        return z
+    } else {
+        return y
+    }
+
+
+    a, b = b, a  // exchange a and b
+
+    x := []int{1, 2, 3}
+    i := 0
+    i, x[i] = 1, 2  // set i = 1, x[0] = 2
+
+    i = 0
+
+
+    var p *Point
+
+
+    i = 2
+    x = []int{3, 5, 7}
+    for i, x[i] = range x {  // set i, x[2] = 0, x[0]
+        break
+    }
+    // after this loop, i == 0 and x == []int{3, 5, 3}
+
+    //error here
+    x[i], i = 2, 1  // set x[0] = 2, i = 1
+
+    //error here
+    x[0], x[0] = 1, 2  // set x[0] = 1, then x[0] = 2 (so x[0] == 2 at end)
+
+    x[1], x[3] = 4, 5  // set x[1] = 4, then panic setting x[3] = 5.
+
+    //error here
+    type Point struct { x, y int }
+
+    //error here
+    x[2], p.x = 6, 7  // set x[2] = 6, then panic setting p.x = 7
+
+
+
+
+
+
+
+
+    x = 1
+    a[i] = 23
+
+    //error here
+    (k) = <-ch  // same as: k = <-ch
+
+    //error here
+    *p = f()
+
+    h(x+y)
+    f.Close()
+    <-ch
+    len("foo") 
+
+    //error here
+    (<-ch)
+
+    ^1        // untyped integer constant, equal to -2
+	uint8(^1) // illegal: same as uint8(-2), -2 cannot be represented as a uint8
+	^uint8(1) // typed uint8 constant, same as 0xFF ^ uint8(1) = uint8(0xFE)
+	int8(^1)  // same as int8(-2)
+	^int8(1)  //
+
+    //error here
+	string([]rune(nil))                                 // ""
+
+    // error here
+	string([]rune{})                                    // ""
+    // error here
+	string([]rune{0x767d, 0x9d6c, 0x7fd4})              // "\u767d\u9d6c\u7fd4" == "白鵬翔"
+    //error here
+	string(MyBytes{'h', 'e', 'l', 'l', '\xc3', '\xb8'}) // "hellø"
+    //error here
+    type MyBytes []byte
+
+
+
+	string('a')  // "a"
+	string(-1)   // "\ufffd" == "\xef\xbf\xbd"
+	string(0xf8) // "\u00f8" == "ø" == "\xc3\xb8"
+	type MyString string
+	MyString(0x65e5) // "\u65e5" == "日" == "\xe6\x97\xa5"
+
+    //error here
+	string([]byte(nil))                                // ""
+    //error here
+	string([]byte{'h', 'e', 'l', 'l', '\xc3', '\xb8'}) // "hellø"
+    //eeror here
+	string([]byte{})                                   // ""
+}
