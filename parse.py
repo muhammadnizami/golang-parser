@@ -1104,7 +1104,7 @@ def nt_ReceiverType():
 #	FOLLOW(Expression): ,;]):
 def nt_Expression():
 	nt_UnaryExpr()
-	while symbol not in {",",";","}","]",")",":","{"}:
+	while symbol in nt_binary_op_set:
 		nt_binary_op()
 		nt_UnaryExpr()
 
