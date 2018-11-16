@@ -865,6 +865,7 @@ def nt_LiteralType():
 		accept("[")
 		if symbol=="...":
 			accept("...")
+			accept("]")
 			nt_ElementType()
 		elif symbol=="]":
 			accept("]")
@@ -929,6 +930,9 @@ def nt_FunctionLit():
 # <PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
 #	FOLLOW(Selector) contains "." which is in FIRST(Selector)
 #	<PrimaryExpr> ::= ( identifier | Literal | "(" Expression ")" ) { SelectorOrTypeAssertion | IndexOrSlice }
+#	Literal can be CompositeLit, which can be LiteralType LiteralValue
+#	LiteralType can be TypeName, which is identifier | QualifiedIdent
+#					CompositeLit is skipped for now
 def nt_PrimaryExprFront():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
@@ -964,9 +968,9 @@ def nt_PrimaryExprFront():
 			if symbol==",":
 				accept(",")
 			accept(")")
-
 	else:
 		nt_Literal()
+
 def nt_PrimaryExpr():
 	nt_PrimaryExprFront()
 	while symbol in {".", "[", "("}:

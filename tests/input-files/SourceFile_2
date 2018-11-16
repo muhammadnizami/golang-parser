@@ -24,7 +24,7 @@ func sieve() {
 	ch := make(chan int)  // Create a new channel.
 	go generate(ch)       // Start generate() as a subprocess.
 	for {
-		prime := <-ch
+		prime := <-ch1
 		fmt.Print(prime, "\n")
 		ch1 := make(chan int)
 		go filter(ch, ch1, prime)
@@ -82,7 +82,7 @@ func (p *Point) Length() float64 {
 
 
 //error here
-var pointer *Point3D = &Point3D{y: 1000}
+//var pointer *Point3D = &Point3D{y: 1000}
 
 
 func (p *Point) Scale(factor float64) {
