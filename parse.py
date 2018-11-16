@@ -874,10 +874,39 @@ def nt_FunctionLit():
 def nt_PrimaryExpr():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
-	elif symbol=="(": #TODO fix this. parentheses can also mean Type
-		accept("(")
-		nt_Expression()
-		accept(")")
+	elif symbol=="(":
+		count_openparentheses = 0
+		while symbol=="(":
+			accept("(")
+			count_openparentheses += 1
+
+		if symbol in {"[","struct","*","func","interface","map","chan"}: #obviously Type, then conversion
+			isConversion=True
+			nt_Type()
+		elif symbol=="<-": #might be ChannelType, might be not
+			accept("<-")
+			if symbol=="chan":
+				accept("chan")
+				nt_ElementType()
+				isConversion = True
+			else:
+				isConversion = False
+				nt_Expression()
+		else:
+			isConversion = False
+			nt_Expression()
+
+		while count_openparentheses > 0:
+			accept(")")
+			count_openparentheses -= 1
+
+		if isConversion: # "(" Expression [ "," ] ")"
+			accept("(")
+			nt_Expression()
+			if symbol==",":
+				accept(",")
+			accept(")")
+
 	else:
 		nt_Literal()
 
@@ -927,11 +956,38 @@ def nt_Arguments():
 		while symbol=="(": #possible Type
 			accept("(")
 			count_openparentheses+=1
-		if symbol in set({"[","struct","*","func","interface","map","chan","<-"}): #definitely Type
+		if symbol in set({"[","struct","*","func","interface","map","chan"}): #definitely Type
 			nt_Type()
 			while count_openparentheses>0:
 				accept(")")
 				count_openparentheses-=1
+		elif symbol=="<-": #might be ChannelType, might be not
+			accept("<-")
+			if symbol=="chan":
+				accept("chan")
+				nt_ElementType()
+				while count_openparentheses>0:
+					accept(")")
+					count_openparentheses-=1
+			else:
+				nt_Expression() #TypeName is included
+				while count_openparentheses>0:
+					accept(")")
+					count_openparentheses-=1
+					#remember:
+					#	<PrimaryExpr> ::= Operand | Conversion | MethodExpr | PrimaryExpr Selector | PrimaryExpr Index | PrimaryExpr Slice | PrimaryExpr TypeAssertion | PrimaryExpr Arguments
+					while symbol in {".", "[", "("}:
+							if symbol==".":
+								nt_SelectorOrTypeAssertion()
+							elif symbol=="[":
+								nt_IndexOrSlice()
+							else: #symbol=="("
+								# Arguments, also includes conversion
+								nt_Arguments()
+					#	<Expression> ::= UnaryExpr | Expression binary_op Expression
+					if symbol != ")":
+						nt_binary_op()
+						nt_Expression()
 		else:
 			nt_Expression() #TypeName is included
 			while count_openparentheses>0:
@@ -1324,13 +1380,13 @@ def nt_IfStmt():
 				nt_ExpressionList()
 			acceptsemicolon()
 			nt_Expression()
+	nt_Block()
 	if symbol=="else":
 		accept("else")
 		if symbol=="if":
 			nt_IfStmt()
 		else:
 			nt_Block()
-	nt_Block()
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
@@ -1340,7 +1396,7 @@ def nt_SwitchStmt():
 	accept("switch")
 
 	if symbol != "{":
-		if symbol is in set(string.ascii_letters+"_"): #might be identifier
+		if symbol in set(string.ascii_letters+"_"): #might be identifier
 			nt_identifier()
 			#TODO
 		else: #might be SimpleStmt or PrimaryExpr
@@ -1359,7 +1415,7 @@ def nt_SwitchStmt():
 						accept("--")
 					while symbol != "}":
 						nt_ExprCaseClause()
-					
+
 				else: #PrimaryExpr or PrimaryExpr binary_op Expression
 						#if PrimaryExpr, cannot use nt_PrimaryExpr() because there is "." "(" "type" ")" after
 						#TODO fix this
