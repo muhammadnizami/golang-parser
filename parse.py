@@ -249,14 +249,10 @@ def nt_imaginary_lit():
 	accept("i")
 
 # <rune_lit> ::= " ' " ( unicode_value | byte_value ) " ' "
+# <rune_lit> ::= " ' " ( unicode_value_or_byte_value ) " ' "
 def nt_rune_lit():
 	accept("'")
-	if symbol in set(string.unicode_value):
-		nt_unicode_value()
-	elif symbol in set(string.hexdigits).union(string.octdigits):
-		nt_byte_value()
-	else:
-		output_error_and_halt()
+	nt_unicode_or_byte_value()
 	accept("'")
 
 # <unicode_value> ::= unicode_char | little_u_value | big_u_value | escaped_char
@@ -271,6 +267,35 @@ def nt_unicode_value():
 			nt_big_u_value()
 		else:
 			nt_escaped_char()
+
+def nt_unicode_value_or_byte_value():
+	if symbol!='\\':
+		accept(symbol)
+	else:
+		accept("\\")
+		if symbol in {"a","b","f","n","r","t","v",'\\', "'", '"'}:
+			accept(symbol)
+		elif symbol=="x":
+			accept("x")
+			nt_hex_digit()
+			nt_hex_digit()
+		elif symbol=="u":
+			nt_hex_digit()
+			nt_hex_digit()
+			nt_hex_digit()
+			nt_hex_digit()
+		elif symbol=="U":
+			nt_hex_digit()
+			nt_hex_digit()
+			nt_hex_digit()
+			nt_hex_digit()
+		else:
+			nt_octal_digit()
+			nt_octal_digit()
+			nt_octal_digit()
+
+def is_unicode_value(symbol):
+	return len(symbol)==1 and symbol!="\n"
 
 # <byte_value> ::= octal_byte_value | hex_byte_value
 def nt_byte_value():
@@ -341,20 +366,19 @@ def nt_escaped_char():
 	
 # <string_lit> ::= raw_string_lit | interpreted_string_lit
 def nt_string_lit():
-	if symbol == "'":
+	if symbol == "`":
 		nt_raw_string_lit()
 	elif symbol == '"':
 		nt_interpreted_string_lit()
 # <raw_string_lit> ::= "`" { unicode_char | newline } "`"
 def nt_raw_string_lit():
-	accept("'")
-	while symbol in set(string.ascii_letters).union({"\n"}):
+	accept("`")
+	while symbol!="`":
 		if symbol == "\n":
 			nt_newline()
 		else:
 			nt_unicode_char()
-	accept('"')
-	accept("'")
+	accept("`")
 
 # <interpreted_string_lit> ::= `"` { unicode_value | byte_value } `"`
 #	THIS IS NOT LL(1)
@@ -1361,7 +1385,7 @@ def nt_IfStmt():
 
 def nt_SimpleStmtRhs(statementFinished=False):
 	stmtdone = False
-	while not stmtdone and symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}.union(nt_binary_op_set):
+	while not stmtdone and symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}.union(nt_binary_op_set) and symbol!=";":
 		if symbol=="<-":
 			accept("<-")
 			nt_Expression()
