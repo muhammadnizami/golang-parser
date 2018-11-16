@@ -110,6 +110,7 @@ def nt_hex_digit():
 	elif symbol in set({"A","B","C","D","E","F","a","b","c","d","e","f"}):
 		accept(symbol)
 
+import traceback
 # <identifier> ::= letter { letter | unicode_digit }
 def nt_identifier():
 	nt_letter()
@@ -873,7 +874,6 @@ def nt_FunctionLit():
 def nt_PrimaryExpr():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
-		#TODO implement MethodExpr and Conversion
 	elif symbol=="(": #TODO fix this. parentheses can also mean Type
 		accept("(")
 		nt_Expression()
@@ -979,7 +979,7 @@ def nt_ReceiverType():
 #	FOLLOW(Expression): ,;]):
 def nt_Expression():
 	nt_UnaryExpr()
-	while symbol not in {",",";","}","]",")",":"}:
+	while symbol not in {",",";","}","]",")",":","{"}:
 		nt_UnaryExpr()
 
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
@@ -1304,7 +1304,10 @@ def nt_IfStmt():
 				acceptsemicolon()
 				nt_Expression()
 
-	elif symbol != ";":
+	elif symbol == ";":
+		acceptsemicolon()
+		nt_Expression()
+	else:
 		nt_Expression()
 		if symbol!="{":
 			if symbol== "<-":
@@ -1321,16 +1324,51 @@ def nt_IfStmt():
 				nt_ExpressionList()
 			acceptsemicolon()
 			nt_Expression()
-	nt_Block()
 	if symbol=="else":
 		accept("else")
 		if symbol=="if":
 			nt_IfStmt()
 		else:
 			nt_Block()
+	nt_Block()
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
+# change to: <SwitchStmt> ::= "switch" [ SimpleStmt ";" ] ( [ Expression ] "{" { ExprCaseClause } "}" | TypeSwitchGuard "{" { TypeCaseClause } "}" )
+#	<SwitchStmt> ::= "switch" [ SimpleStmt ";" ] ( "{" { ExprCaseClause } | ( Expression "{" ExprCaseClause | [ identifier ":=" ] PrimaryExpr "." "(" "type" ")" "{" TypeCaseClause )) "}"
+def nt_SwitchStmt():
+	accept("switch")
+
+	if symbol != "{":
+		if symbol is in set(string.ascii_letters+"_"): #might be identifier
+			nt_identifier()
+			#TODO
+		else: #might be SimpleStmt or PrimaryExpr
+			if symbol==";":
+				accept(";")
+			else: #might be SimpleStmt that begins with Expression; or PrimaryExpr
+				if symbol in nt_unary_op_set: #obviously not PrimaryExpr
+					# ExpressionStmt | SendStmt | IncDecStmt | Assignment
+					# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
+					nt_Expression()
+					if symbol=="<-":
+						nt_Expression()
+					elif symbol=="++":
+						accept("++")
+					elif symbol=="--":
+						accept("--")
+					while symbol != "}":
+						nt_ExprCaseClause()
+					
+				else: #PrimaryExpr or PrimaryExpr binary_op Expression
+						#if PrimaryExpr, cannot use nt_PrimaryExpr() because there is "." "(" "type" ")" after
+						#TODO fix this
+					pass
+
+	else:
+		while symbol != "}":
+			nt_ExprCaseClause()
+	accept("}")
 
 # <ExprSwitchStmt> ::= "switch" [ SimpleStmt ";" ] [ Expression ] "{" { ExprCaseClause } "}"
 def nt_ExprSwitchStmt():
@@ -1434,13 +1472,6 @@ def nt_ForStmt():
 		nt_Expression()
 	elif symbol != "{":
 		if after_identifier:
-			if symbol=="(": #Conversion, identifier is type, then follows "(" Expression [ "," ] ")"
-							#TODO implement Arguments
-				accept("(")
-				nt_Expression()
-				if symbol==",":
-					nt_Expression()
-				accept(")")
 			while symbol in {".", "[", "("}:
 				if symbol==".":
 					nt_SelectorOrTypeAssertion()
