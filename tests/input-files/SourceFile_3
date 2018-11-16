@@ -1,5 +1,56 @@
 package main;
 
+func aritmathic(){
+    x = q*y + r  and  |r| < |y|
+}
+
+var s uint = 33
+var i = 1 << s               // 1 has type int
+var j int32 = 1 << s         // 1 has type int32; j == 0
+var k = uint64(1 << s)       // 1 has type uint64; k == 1<<33
+var m int = 1.0 << s         // 1.0 has type int; m == 0 if ints are 32bits in size
+var n = 1.0<<s == j          // 1.0 has type int32; n == true
+var o = 1<<s == 2<<s         // 1 and 2 have type int; o == true if ints are 32bits in size
+var p = 1<<s == 1<<33        // illegal if ints are 32bits in size: 1 has type int, but 1<<33 overflows int
+var u = 1.0 << s             // illegal: 1.0 has type float64, cannot shift
+var u1 = 1.0<<s != 0         // illegal: 1.0 has type float64, cannot shift
+var u2 = 1<<s != 1.0         // illegal: 1 has type float64, cannot shift
+var v float32 = 1 << s       // illegal: 1 has type float32, cannot shift
+var w int64 = 1.0 << 33      // 1.0<<33 is a constant shift expression
+var x = a[1.0<<s]            // 1.0 has type int; x == a[0] if ints are 32bits in size
+
+//error here
+var a = make([]byte, 1.0<<s) // 1.0 has type int; len(a) == 0 if ints are 32bits in size
+
+func cinta() {
+	f := i.M
+	f(7) // like i.M(7)
+
+	s := a[1:4]
+
+    //error here
+	var i interface{ M(int) } = myVal
+    //error here
+	a := [5]int{1, 2, 3, 4, 5}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////
+
+
+
 type T0 struct {
 	x int
 }
@@ -11,13 +62,6 @@ type T1 struct {
 
 func (T1) M1()
 
-type T2 struct {
-	z int
-	T1
-	*T0
-}
-
-func (*T2) M2()
 
 type Q *T2
 
@@ -28,23 +72,29 @@ var q Q = p
 type T struct {
 	a int
 }
-func (tv  T) Mv(a int) int         { return 0 }  // value receiver
-func (tp *T) Mp(f float32) float32 { return 1 }  // pointer receiver
+
 
 var t T
 var pt *T
 func makeT() T
 
-type T struct {
-	a int
-}
-func (tv  T) Mv(a int) int         { return 0 }  // value receiver
-func (tp *T) Mp(f float32) float32 { return 1 }  // pointer receiver
-
-var t T
-var pt *T
-func makeT() T
 
 
 //error here
 func (*T0) M0()
+
+type T2 struct {
+	z int
+	T1
+    //error here
+	*T0
+
+// error here
+func (*T2) M2()
+}
+
+//error here
+func (tv  T) Mv(a int) int         { return 0 }  // value receiver
+
+//error here
+func (tp *T) Mp(f float32) float32 { return 1 }  // pointer receiver
