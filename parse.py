@@ -659,7 +659,7 @@ def nt_IdentifierList():
 	nt_identifier()
 	while symbol == ",":
 		accept(",")
-		nt_identifier
+		nt_identifier()
 
 # <ExpressionList> ::= Expression { "," Expression }
 def nt_ExpressionList():
