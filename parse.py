@@ -52,7 +52,7 @@ def main(filename):
 				for line in file:
 					c_no=1
 					for c in line:
-						if l==line_no and c_no == column_no:
+						if l==line_no and c_no >= column_no and c_no<column_no+len(symbol):
 							print(colored(c,'red'),end='')
 						elif (l==line_no and c_no > column_no) or (l>line_no):
 							print(colored(c,'grey'),end='')
