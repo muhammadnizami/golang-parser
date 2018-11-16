@@ -426,7 +426,7 @@ def nt_TypeName():
 # <TypeLit> ::= ArrayType | StructType | PointerType | FunctionType | InterfaceType | SliceType | MapType | ChannelType
 def nt_TypeLit():
 	if symbol == "[":
-		nt_ArrayType()
+		nt_ArrayOrSliceType()
 	elif symbol == "struct":
 		nt_StructType()
 	elif symbol == "*":
@@ -435,12 +435,18 @@ def nt_TypeLit():
 		nt_FunctionType()
 	elif symbol == "interface":
 		nt_InterfaceType()
-	elif symbol == "[]":
-		nt_SliceType()
 	elif symbol == "map":
 		nt_MapType()
 	else:
 		nt_ChannelType()
+
+# <ArrayOrSliceType> ::= "[" [ ArrayLength ] "]" ElementType
+def nt_ArrayOrSliceType():
+	accept("[")
+	if symbol!="]":
+		nt_ArrayLength()
+	accept("]")
+	nt_ElementType()
 
 # <ArrayType> ::= "[" ArrayLength "]" ElementType
 def nt_ArrayType():
@@ -567,7 +573,7 @@ def nt_MethodName():
 	nt_identifier()
 
 # <InterfaceTypeName> ::= TypeName
-def nt_InterfaceType():
+def nt_InterfaceTypeName():
 	nt_TypeName()
 
 # <MapType> ::= "map" "[" KeyType "]" ElementType
