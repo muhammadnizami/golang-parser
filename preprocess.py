@@ -64,7 +64,7 @@ def line_needs_semicolon(line, last_nonwhitespace_i):
 	if line[last_nonwhitespace_i] in semicolon_indicator_chars:
 		return True
 	if last_nonwhitespace_i > 0:
-		if line[last_nonwhitespace_i] is '.' and line[last_nonwhitespace_i-1] in string.ascii_digits:
+		if line[last_nonwhitespace_i] is '.' and line[last_nonwhitespace_i-1] in string.digits:
 			return True
 		if line[last_nonwhitespace_i-1:last_nonwhitespace_i+1] in ['++','--']:
 			return True

@@ -579,7 +579,7 @@ def nt_Block():
 
 # <StatementList> ::= { Statement ";" }
 def nt_StatementList():
-	while symbol in set(string.ascii_letters).union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"	}):
+	while symbol in set(string.ascii_letters+'.').union({"_"}).union({"const", "type", "var","go","return","break","continue","goto","fallthrough","{","if","switch","select","for","defer"}).union(nt_unary_op_set).union(nt_literal_first_set):
 		nt_Statement()
 		acceptsemicolon()
 
@@ -751,6 +751,7 @@ def Operand():
 	else:
 		nt_Literal()
 
+nt_literal_first_set = set(string.digits+".'`"+'"').union({"struct","[","map","func"})
 # <Literal> ::= BasicLit | CompositeLit | FunctionLit
 def nt_Literal():
 	if symbol in set(string.digits+".'`"+'"'):
@@ -803,11 +804,14 @@ def nt_numeric_lit():
 			if symbol in {"e","E"}:
 				nt_exponent()
 	elif symbol==".":
+		accept(".")
 		nt_decimals()
 		if symbol in {"e","E"}:
-			nt_exponent()		
+			nt_exponent()	
 	else:
 		output_error_and_halt()
+	if symbol=="i":
+		accept("i")
 # <OperandName> ::= identifier | QualifiedIdent.
 # NOT LL(1)
 # change to: <OperandName> ::= identifier [ "." identifier] 
