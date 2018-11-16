@@ -948,9 +948,12 @@ def nt_PrimaryExprFront():
 			accept("(")
 			count_openparentheses += 1
 
-		if symbol in {"[","struct","*","func","interface","map","chan"}: #obviously Type, then conversion
+		if symbol in {"[","struct","*","func","interface","map","chan"}: #obviously Type
 			isConversion=True
 			nt_Type()
+			if symbol=="{": #CompositeLit
+				nt_LiteralValue()
+
 		elif symbol=="<-": #might be ChannelType, might be not
 			accept("<-")
 			if symbol=="chan":
@@ -1037,6 +1040,8 @@ def nt_Arguments():
 					accept(",")
 				accept(")")
 				nt_PrimaryExprRepeat()
+			elif symbol=="{": #CompositeLit
+				nt_LiteralValue()
 			while count_openparentheses>0:
 				accept(")")
 				count_openparentheses-=1
