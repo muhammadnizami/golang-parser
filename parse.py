@@ -659,17 +659,17 @@ def nt_TypeDecl():
 
 # <TypeSpec> ::= AliasDecl | TypeDef
 # change to:
-#	<TypeSpec> ::= identifier [ "::=" ] Type
+#	<TypeSpec> ::= identifier [ "=" ] Type
 def nt_TypeSpec():
 	nt_identifier()
-	if symbol== "::=":
-		accept("::=")
+	if symbol== "=":
+		accept("=")
 	nt_Type()
 	
-# <AliasDecl> ::= identifier "::=" Type
+# <AliasDecl> ::= identifier "=" Type
 def nt_AliasDecl():
 	nt_identifier()
-	accept("::=")
+	accept("=")
 	nt_Type()
 
 # <TypeDef> ::= identifier Type
@@ -691,16 +691,16 @@ def nt_VarDecl():
 	else:
 		output_error_and_halt()
 
-# <VarSpec> ::= IdentifierList ( Type [ "::=" ExpressionList ] | "::=" ExpressionList )
+# <VarSpec> ::= IdentifierList ( Type [ "=" ExpressionList ] | "=" ExpressionList )
 def nt_VarSpec():
 	nt_IdentifierList()
-	if symbol == "::=":
-		accept("::=")
+	if symbol == "=":
+		accept("=")
 		nt_ExpressionList()
 	elif symbol in set(string.ascii_letters).union({"_","(","[","struct","*","func","interface","map","chan","<-"}):
 		nt_Type()
-		if symbol == "::=":
-			accept("::=")
+		if symbol == "=":
+			accept("=")
 			nt_ExpressionList()
 	else:
 		output_error_and_halt()
