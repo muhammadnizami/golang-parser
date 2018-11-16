@@ -1,6 +1,7 @@
 import preprocess
 import symbol_read
 import string
+from termcolor import colored
 # a procedural program for parsing
 
 #state variables
@@ -28,12 +29,40 @@ def output_error_and_halt():
 	raise SystemExit
 
 def main(filename):
-	#main program
-	open_symbolic_file(filename)
-	read_one_symbol()
-	#call start symbol
-	nt_SourceFile()
-	#output final
+	try:
+		#main program
+		open_symbolic_file(filename)
+		read_one_symbol()
+		#call start symbol
+		nt_SourceFile()
+
+		#output if no error
+		with open(filename) as file:
+			for line in file:
+				print(line,end='')
+
+		print("no error was found. file syntax is valid")
+	except SystemExit as e:
+		print("specifically in the file please see below")
+		print("=========================================")
+		if line_no!="last":
+			#output final error
+			with open(filename) as file:
+				l=1
+				for line in file:
+					c_no=1
+					for c in line:
+						if l==line_no and c_no == column_no:
+							print(colored(c,'red'),end='')
+						elif (l==line_no and c_no > column_no) or (l>line_no):
+							print(colored(c,'grey'),end='')
+						else:
+							print(c,end='')
+						c_no=c_no+1
+					l=l+1
+			print('\033[0m')
+		print("=========================================")
+		print("error! see above")
 
 #GRAMMAR IMPLEMENTATION HERE
 # |  |  |  |
@@ -1804,8 +1833,13 @@ def nt_ImportPath():
 	nt_string_lit()
 
 
-
+import sys
 
 #END OF GRAMMAR IMPLEMENTATION
-if __name__ == 'main':
-	main(filename)
+if __name__ == '__main__':
+	import sys
+	if len(sys.argv) != 2:
+		print("to test: preprocess.py <inputfile>")
+		sys.exit()
+
+	main(sys.argv[1])
