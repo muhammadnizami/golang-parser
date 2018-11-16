@@ -56,7 +56,7 @@ def preprocess(file):
 
 #helper functions
 import string
-semicolon_indicator_chars = list(string.ascii_letters)+list(string.digits)+[')',']','}','_','"',"'",]
+semicolon_indicator_chars = list(string.ascii_letters)+list(string.digits)+[')',']','}','_','"',"'",";"]
 
 def line_needs_semicolon(line, last_nonwhitespace_i):
 	if last_token_is_semicolonless_keyword(line,last_nonwhitespace_i):
