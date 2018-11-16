@@ -517,20 +517,20 @@ def nt_FunctionType():
 # <Signature> ::= Parameters [ Result ]
 def nt_Signature():
 	nt_Parameters()
-	if symbol in set(string.ascii_letters).union({"(","_"}):
+	if symbol in set(string.ascii_letters).union({"(","_"}).union({"[","struct","*","func","interface","map","chan","<-"}):
 		nt_Result()
 
 # <Result> ::= Parameters | Type
 def nt_Result():
 	if symbol == "(":
 		nt_Parameters()
-	elif symbol in set(string.ascii_letters).union({"(","_"}):
+	elif symbol in set(string.ascii_letters).union({"(","_"}).union({"[","struct","*","func","interface","map","chan","<-"}):
 		nt_Type()
 
 # <Parameters> ::= "(" [ ParameterList [ "," ] ] ")"
 def nt_Parameters():
 	accept("(")
-	if symbol in set(string.ascii_letters).union({"(","_"}):
+	if symbol in set(string.ascii_letters).union({"(","_"}).union({"[","struct","*","func","interface","map","chan","<-"}):
 		nt_ParameterList()
 		if symbol == ",":
 			accept(",")
@@ -1633,6 +1633,8 @@ def nt_ForStmt():
 			acceptsemicolon()
 			if symbol != "{": #FOLLOW(ForClause)
 				nt_PostStmt()
+	elif symbol == "range" and not after_identifier:
+		nt_RangeClause()
 	elif symbol != "{":
 		if after_identifier:
 			while symbol in {".", "[", "("}:
@@ -1880,7 +1882,7 @@ def nt_ImportDecl():
 def nt_ImportSpec():
 	if symbol==".":
 		accept(".")
-	elif symbol in set(string.ascii_letters):
+	elif symbol in set(string.ascii_letters+"_"):
 		nt_PackageName()
 	nt_ImportPath()
 
