@@ -1,3 +1,5 @@
+#based on tokenization rules in https://golang.org/ref/spec
+#we only tokenize keywords and operators. identifiers and literals are treated character by character
 import string
 
 keywords = ['break','default','func','interface','select',

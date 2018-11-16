@@ -3,6 +3,7 @@ import symbol_read
 import string
 from termcolor import colored
 # a procedural program for parsing
+# based on the EBNF rules in https://golang.org/ref/spec
 
 #state variables
 file = None

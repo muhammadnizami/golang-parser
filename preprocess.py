@@ -1,4 +1,4 @@
-
+#based on the preprocess rules in https://golang.org/ref/spec
 def preprocess(file):
 	"""
 	a generator reads the file, preprocesses it
