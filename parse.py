@@ -977,8 +977,7 @@ def nt_PrimaryExprFront():
 	else:
 		nt_Literal()
 
-def nt_PrimaryExpr():
-	nt_PrimaryExprFront()
+def nt_PrimaryExprRepeat():
 	while symbol in {".", "[", "("}:
 		if symbol==".":
 			nt_SelectorOrTypeAssertion()
@@ -987,6 +986,10 @@ def nt_PrimaryExpr():
 		else: #symbol=="("
 			# Arguments, also includes conversion
 			nt_Arguments()
+
+def nt_PrimaryExpr():
+	nt_PrimaryExprFront()
+	nt_PrimaryExprRepeat()
 # also FOLLOW(TypeAssertion) is the same
 # <Selector> ::= "." identifier
 # <Index> ::= "[" Expression "]"
@@ -1027,6 +1030,13 @@ def nt_Arguments():
 			count_openparentheses+=1
 		if symbol in set({"[","struct","*","func","interface","map","chan"}): #definitely Type
 			nt_Type()
+			if symbol=="(": #conversion
+				accept("(")
+				nt_Expression()
+				if symbol==",":
+					accept(",")
+				accept(")")
+				nt_PrimaryExprRepeat()
 			while count_openparentheses>0:
 				accept(")")
 				count_openparentheses-=1
