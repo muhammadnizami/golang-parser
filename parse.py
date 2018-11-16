@@ -540,6 +540,7 @@ def nt_ChannelType():
 		accept == "chan"
 	else:
 		output_error_and_halt()
+	nt_ElementType()
 
 # <Block> ::= "{" StatementList "}"
 def nt_Block():
@@ -675,10 +676,10 @@ def nt_VarSpec():
 	else:
 		output_error_and_halt()
 
-# <ShortVarDecl> ::= IdentifierList ":::=" ExpressionList
+# <ShortVarDecl> ::= IdentifierList ":=" ExpressionList
 def nt_ShortVarDecl():
 	nt_IdentifierList()
-	accept(":::=")
+	accept(":=")
 	nt_ExpressionList()
 
 # <FunctionDecl> ::= "func" FunctionName Signature [ FunctionBody ]
