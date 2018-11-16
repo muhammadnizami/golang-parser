@@ -30,6 +30,15 @@ func sieve() {
 		go filter(ch, ch1, prime)
 		ch = ch1
 	}
+	for a < b {
+		a *= 2
+	}
+	for i := 0; i < 10; i++ {
+		f(i)
+	}
+	for w := range ch {
+		doWork(w)
+	}
 }
 
 func main() {

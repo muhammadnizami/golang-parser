@@ -1160,7 +1160,10 @@ def nt_LabeledStmtOrSimpleStmt():
 						statementFinished=True
 					nt_ExpressionList()
 				elif symbol not in {",","++","--","<-","=",";","}"}:
-					nt_binary_op()
+					if symbol in nt_assign_op_set:
+						nt_assign_op()
+					else:
+						nt_binary_op()
 					nt_ExpressionList()
 
 				if symbol=="," and not statementFinished:
@@ -1267,12 +1270,11 @@ def nt_Assignment():
 	nt_ExpressionList()
 
 # <assign_op> ::= [ add_op | mul_op ] "="
+# turns out this isn't consistent
+# we now refer to the operator list
+nt_assign_op_set = ['+=','&=','-=','|=','<=','*=','^=','>=','/=','<<=','%=','>>=','&^=','=']
 def nt_assign_op():
-	if symbol in {"+", "-", "|", "^"}:
-		nt_add_op()
-	elif symbol in {"*", "/", "%", "<<", ">>", "&", "&^"}:
-		nt_mul_op()
-	accept("=")
+	acceptset(nt_assign_op_set)
 
 # <IfStmt> ::= "if" [ SimpleStmt ";" ] Expression Block [ "else" ( IfStmt | Block ) ]
 #	FIRST(SimpleStmt) also contains FIRST(Expression)
@@ -1340,10 +1342,9 @@ def nt_SimpleStmtRhs(statementFinished=False):
 			if symbol==",":
 				accept(",")
 				nt_ExpressionList()
-			prevsymbol = symbol
 			if symbol in nt_binary_op_set:
 				nt_binary_op()
-			if prevsymbol in nt_mul_op_set.union(nt_add_op_set).union({"="}) and symbol=="=":
+			elif symbol in nt_assign_op_set:
 				nt_assign_op()
 				stmtdone=True
 			nt_ExpressionList()
