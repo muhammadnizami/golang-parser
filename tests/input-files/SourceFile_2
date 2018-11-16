@@ -75,7 +75,7 @@ func (p *Point) Length() float64 {
 	//error here
 	buffer := [10]string{}             // len(buffer) == 10
 	intSet := [6]int{1, 2, 3, 5}       // len(intSet) == 6
-	days := [...]string{"Sat", "Sun"} 
+	days := [...]string{"Sat", "Sun"} (123)
 }
 
  

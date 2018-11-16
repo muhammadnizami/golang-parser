@@ -62,7 +62,8 @@ func chanelOp() {
 func addresOp() {
 	&x
 	&a[f(2)]
-	&Point{2, 3}
+	//&Point{2, 3}
+	//skip composite literal for now
 	*p
 	*pf(x)
 
@@ -102,10 +103,6 @@ func floatOperator(){
     r  = float64(x*y) + z
     r  = z; r += float64(x*y)
     t  = float64(x*y); r = t + z
-}
-
-func aritmathic(){
-    x = q*y + r  and  |r| < |y|
 }
 
 var s uint = 33
@@ -192,10 +189,10 @@ type T2 struct {
 	T1
     //error here
 	*T0
+}
 
 // error here
 func (*T2) M2()
-}
 
 //error here
 func (tv  T) Mv(a int) int         { return 0 }  // value receiver

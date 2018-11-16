@@ -19,7 +19,7 @@ def test_nt(nt_fun, input_file, should_halt):
 			print("SUCCESS: " + nt_fun.__name__ + " succeeded as expected", "read until " + str(parse.line_no)+","+str(parse.column_no))
 		else:
 			test_fail=True
-			print("FAIL: " + nt_fun.__name__ + " didn't halt as expected")
+			print("FAIL: " + nt_fun.__name__ + " didn't halt as expected", "read until " + str(parse.line_no)+","+str(parse.column_no))
 	except SystemExit as e:
 		if should_halt:
 			print("SUCCESS: " + nt_fun.__name__ + " halted as expected")
@@ -52,7 +52,9 @@ tests = [
 	(nt_SourceFile, 'input-files/SourceFile_2', False),
 	(nt_SourceFile, 'input-files/SourceFile_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_4', False),
-	(nt_SourceFile, 'input-files/SourceFile_5', False)
+	(nt_SourceFile, 'input-files/SourceFile_5', False),
+	(nt_SourceFile, 'input-files/SourceFile_10', True)
+
 ]
 
 def main():

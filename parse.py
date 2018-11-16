@@ -472,7 +472,7 @@ def nt_SliceType():
 def nt_StructType():
 	accept("struct")
 	accept("{")
-	while symbol in set(string.ascii_letters).union({"_"}):
+	while symbol in set(string.ascii_letters).union({"_","*"}):
 		nt_FieldDecl()
 		acceptsemicolon()
 	accept("}")
@@ -487,7 +487,7 @@ def nt_FieldDecl():
 	else:
 		output_error_and_halt()
 	
-	if symbol in set(string.ascii_letters):
+	if symbol in {"'",'"',"`"}:
 		nt_Tag()
 
 # <EmbeddedField> ::= [ "*" ] TypeName
@@ -942,17 +942,22 @@ def nt_FunctionLit():
 def nt_PrimaryExprFront():
 	if symbol in set(string.ascii_letters + "_"):
 		nt_identifier()
-	elif symbol=="(":
+	elif symbol in {"(","[","struct","*","interface","map","chan"}:
 		count_openparentheses = 0
 		while symbol=="(":
 			accept("(")
 			count_openparentheses += 1
 
-		if symbol in {"[","struct","*","func","interface","map","chan"}: #obviously Type
-			isConversion=True
-			nt_Type()
+		if symbol in {"[","struct","*","interface","map","chan"}: #obviously Type or LiteralType
+			if symbol=="[":
+				nt_LiteralType()
+			else:
+				nt_Type()
 			if symbol=="{": #CompositeLit
+				isConversion=False
 				nt_LiteralValue()
+			else:
+				isConversion=True
 
 		elif symbol=="<-": #might be ChannelType, might be not
 			accept("<-")
@@ -977,8 +982,22 @@ def nt_PrimaryExprFront():
 			if symbol==",":
 				accept(",")
 			accept(")")
+	elif symbol=="func":
+		nt_FunctionLitOrFunctionTypeConversionOrFunctionTypeCompositeLit()
 	else:
 		nt_Literal()
+
+def nt_FunctionLitOrFunctionTypeConversionOrFunctionTypeCompositeLit():
+	accept("func")
+	nt_Signature()
+	if symbol=="{":
+		nt_FunctionBody()
+	elif symbol=="(":#conversion
+		accept("(")
+		nt_Expression()
+		if symbol==",":
+			accept(",")
+		accept(")")
 
 def nt_PrimaryExprRepeat():
 	while symbol in {".", "[", "("}:
@@ -1127,7 +1146,9 @@ def nt_Expression():
 def nt_UnaryExpr():
 	if symbol in nt_unary_op_set:
 		nt_unary_op()
-	nt_PrimaryExpr()
+		nt_UnaryExpr()
+	else:
+		nt_PrimaryExpr()
 
 # <binary_op> ::= "||" | "&&" | rel_op | add_op | mul_op
 def nt_binary_op():
