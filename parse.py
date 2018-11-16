@@ -418,11 +418,13 @@ def nt_Type():
 		nt_TypeName()
 
 # <TypeName> ::= identifier | QualifiedIdent
+# change to: <TypeName> ::= identifier [ "." identifier ]
 def nt_TypeName():
 	if symbol in set(string.ascii_letters).union({"_"}):
 		nt_identifier()
-	elif symbol in set(string.ascii_letters).union({"_"}):
-		nt_QualifiedIdent()
+	if symbol==".":
+		accept(".")
+		nt_identifier()
 
 # <TypeLit> ::= ArrayType | StructType | PointerType | FunctionType | InterfaceType | SliceType | MapType | ChannelType
 def nt_TypeLit():
