@@ -12,11 +12,10 @@ func (a *A) save() {
 
 func main() {
 	fmt.Printf("hello, worldd\n")
-	for {
-	}
+	for {fmt.Printf("hello, worldd\n");}
 	var a string;
 	a = a + "\""
-	if true {
+	if ; true {
 	}
 	/*** /**** ////
 	*/
@@ -41,3 +40,4 @@ func main() {
 
 
 }
+

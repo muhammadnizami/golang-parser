@@ -4,6 +4,7 @@ import os,sys
 import traceback
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+import parse
 from parse import *
 
 def test_nt(nt_fun, input_file, should_halt):
@@ -15,7 +16,7 @@ def test_nt(nt_fun, input_file, should_halt):
 		read_one_symbol()
 		nt_fun()
 		if not should_halt:
-			print("SUCCESS: " + nt_fun.__name__ + " succeeded as expected")
+			print("SUCCESS: " + nt_fun.__name__ + " succeeded as expected", "read until " + str(parse.line_no)+","+str(parse.column_no))
 		else:
 			test_fail=True
 			print("FAIL: " + nt_fun.__name__ + " didn't halt as expected")
@@ -27,6 +28,7 @@ def test_nt(nt_fun, input_file, should_halt):
 			traceback.print_exc()
 			print("FAIL: " + nt_fun.__name__ + " halted incorrectly")
 	except Exception as e:
+		traceback.print_exc()
 		print('Exception: ')
 		print(e)
 		test_fail=True
@@ -43,7 +45,11 @@ tests = [
 	(nt_identifier, 'input-files/identifier_2', False),
 	(nt_identifier, 'input-files/identifier_3', False),
 	(nt_identifier, 'input-files/identifier_4', False),
-	(nt_SourceFile, 'input-files/SourceFile_1', False)
+	(nt_ImportDecl, 'input-files/ImportDecl_1', False),
+	(nt_ImportDecl, 'input-files/ImportDecl_2', False),
+	(nt_ImportDecl, 'input-files/ImportDecl_3', False),
+	(nt_SourceFile, 'input-files/SourceFile_1', False),
+	(nt_SourceFile, 'input-files/SourceFile_2', False)
 ]
 
 def main():

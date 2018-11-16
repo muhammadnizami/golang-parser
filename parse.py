@@ -536,8 +536,8 @@ def nt_ChannelType():
 		if symbol == "<-":
 			accept("<-")
 	elif symbol == "<-":
-		accept == "<-"
-		accept == "chan"
+		accept("<-")
+		accept("chan")
 	else:
 		output_error_and_halt()
 	nt_ElementType()
@@ -757,14 +757,14 @@ def nt_numeric_lit():
 				nt_decimals()
 		if symbol in {"e","E"}:
 			nt_exponent()
-	elif symbol==0:
+	elif symbol=="0":
 		accept("0")
 		if symbol in {"x","X"}:
 			acceptset({"x","X"})
 			nt_hex_digit()
 			while symbol in set(string.hexdigits):
 				nt_hex_digit()
-		else:
+		elif symbol in set(string.digits+".eE"):
 			while symbol in set(string.digits):
 				nt_decimal_digit()
 			if symbol==".":
@@ -1038,14 +1038,14 @@ def nt_ReceiverType():
 def nt_Expression():
 	nt_UnaryExpr()
 	while symbol not in {",",";","}","]",")",":","{"}:
+		nt_binary_op()
 		nt_UnaryExpr()
 
 # <UnaryExpr> ::= PrimaryExpr | unary_op UnaryExpr
 def nt_UnaryExpr():
 	if symbol in nt_unary_op_set:
 		nt_unary_op()
-	else:
-		nt_PrimaryExpr()
+	nt_PrimaryExpr()
 
 # <binary_op> ::= "||" | "&&" | rel_op | add_op | mul_op
 def nt_binary_op():
@@ -1082,6 +1082,7 @@ nt_unary_op_set = {"+","-","!","^","*","&","<-"}
 def nt_unary_op():
 	acceptset(nt_unary_op_set)
 
+nt_binary_op_set = nt_rel_op_set.union(nt_add_op_set).union(nt_mul_op_set).union({"||","&&"})
 # <Conversion> ::= Type "(" Expression [ "," ] ")"
 def nt_Conversion():
 	nt_Type()
@@ -1136,8 +1137,8 @@ def nt_LabeledStmtOrSimpleStmt():
 			if symbol==",":
 				accept(",")
 				nt_IdentifierList()
-			if symbol == ":::=":
-				accept(":::=")
+			if symbol == ":=":
+				accept(":=")
 				nt_ExpressionList()
 			else:
 				statementFinished = False
@@ -1167,34 +1168,12 @@ def nt_LabeledStmtOrSimpleStmt():
 					nt_ExpressionList()
 
 				#after that:
-				if symbol=="<-":
-					nt_Expression()
-				elif symbol=="++":
-					accept("++")
-				elif symbol=="--":
-					accept("--")
-				elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="} and not statementFinished:
-					if symbol==",":
-						accept(",")
-						nt_ExpressionList()
-					nt_assign_op()
-					nt_ExpressionList()
+				nt_SimpleStmtRhs(statementFinished)
 	else: #begins with expression
 		# ExpressionStmt | SendStmt | IncDecStmt | Assignment
 		# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
 		nt_Expression()
-		if symbol=="<-":
-			nt_Expression()
-		elif symbol=="++":
-			accept("++")
-		elif symbol=="--":
-			accept("--")
-		elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
-			if symbol==",":
-				accept(",")
-				nt_ExpressionList()
-			nt_assign_op()
-			nt_ExpressionList()
+		nt_SimpleStmtRhs()
 
 # <SimpleStmt> ::= EmptyStmt | ExpressionStmt | SendStmt | IncDecStmt | Assignment | ShortVarDecl
 #	NOT LL(1)
@@ -1203,8 +1182,8 @@ def nt_SimpleStmt():
 		nt_EmptyStmt()
 	elif symbol in set(string.ascii_letters+"_"): #begins with identifier
 		nt_IdentifierList()
-		if symbol == ":::=":
-			accept(":::=")
+		if symbol == ":=":
+			accept(":=")
 			nt_ExpressionList()
 		else:
 			statementFinished = False
@@ -1239,34 +1218,12 @@ def nt_SimpleStmt():
 				nt_ExpressionList()
 
 			#after that:
-			if symbol=="<-":
-				nt_Expression()
-			elif symbol=="++":
-				accept("++")
-			elif symbol=="--":
-				accept("--")
-			elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="} and not statementFinished:
-				if symbol==",":
-					accept(",")
-					nt_ExpressionList()
-				nt_assign_op()
-				nt_ExpressionList()
+			nt_SimpleStmtRhs(statementFinished)
 	else: #begins with expression
 		# ExpressionStmt | SendStmt | IncDecStmt | Assignment
 		# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
 		nt_Expression()
-		if symbol=="<-":
-			nt_Expression()
-		elif symbol=="++":
-			accept("++")
-		elif symbol=="--":
-			accept("--")
-		elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
-			if symbol==",":
-				accept(",")
-				nt_ExpressionList()
-			nt_assign_op()
-			nt_ExpressionList()
+		nt_SimpleStmtRhs()
 
 # <EmptyStmt> ::=
 def nt_EmptyStmt():
@@ -1325,11 +1282,11 @@ def nt_IfStmt():
 	accept("if")
 	if symbol in set(string.ascii_letters+"_"): #maybe identifierlist, maybe expression
 		nt_identifier()
-		if symbol=="," or symbol==":::=" : #obviously identifierList
+		if symbol=="," or symbol==":=" : #obviously identifierList
 			if symbol==",":
 				accept(",")
 				nt_IdentifierList()
-			accept(":::=")
+			accept(":=")
 			nt_ExpressionList()
 			acceptsemicolon()
 			nt_Expression()
@@ -1347,20 +1304,7 @@ def nt_IfStmt():
 				nt_binary_op()
 				nt_Expression()
 			if symbol!="{":
-				if symbol== "<-":
-					accept("<-")
-					nt_Expression()
-				elif symbol=="++":
-					accept("++")
-				elif symbol=="--":
-					accept("--")
-				elif symbol=="," or symbol in {"+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
-					while symbol==",":
-						nt_Expression()
-					nt_assign_op()
-					nt_ExpressionList()
-				acceptsemicolon()
-				nt_Expression()
+				nt_SimpleStmtRhs()
 
 	elif symbol == ";":
 		acceptsemicolon()
@@ -1368,18 +1312,7 @@ def nt_IfStmt():
 	else:
 		nt_Expression()
 		if symbol!="{":
-			if symbol== "<-":
-				accept("<-")
-				nt_Expression()
-			elif symbol=="++":
-				accept("++")
-			elif symbol=="--":
-				accept("--")
-			elif symbol=="," or symbol in {"+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
-				while symbol==",":
-					nt_Expression()
-				nt_assign_op()
-				nt_ExpressionList()
+			nt_SimpleStmtRhs()
 			acceptsemicolon()
 			nt_Expression()
 	nt_Block()
@@ -1389,6 +1322,31 @@ def nt_IfStmt():
 			nt_IfStmt()
 		else:
 			nt_Block()
+
+def nt_SimpleStmtRhs(statementFinished=False):
+	stmtdone = False
+	while not stmtdone and symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}.union(nt_binary_op_set):
+		if symbol=="<-":
+			accept("<-")
+			nt_Expression()
+			stmtdone=True
+		elif symbol=="++":
+			accept("++")
+			stmtdone=True
+		elif symbol=="--":
+			accept("--")
+			stmtdone=True
+		elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}.union(nt_binary_op_set) and not statementFinished:
+			if symbol==",":
+				accept(",")
+				nt_ExpressionList()
+			prevsymbol = symbol
+			if symbol in nt_binary_op_set:
+				nt_binary_op()
+			if prevsymbol in nt_mul_op_set.union(nt_add_op_set).union({"="}) and symbol=="=":
+				nt_assign_op()
+				stmtdone=True
+			nt_ExpressionList()
 
 # <SwitchStmt> ::= ExprSwitchStmt | TypeSwitchStmt
 # maybe ExprSwitchStmt and TypeSwitchStmt needs to be merged
@@ -1421,18 +1379,7 @@ def nt_SwitchStmt():
 					# Expression [ "<-" Expression | "++" | "--" | [ "," ExpressionList ] assign_op ExpressionList]
 					nt_Expression()
 					isSurelyStmt = symbol in {"<-","++","--",",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}
-					if symbol=="<-":
-						nt_Expression()
-					elif symbol=="++":
-						accept("++")
-					elif symbol=="--":
-						accept("--")
-					elif symbol in {",","+", "-", "|", "^","*", "/", "%", "<<", ">>", "&", "&^","="}:
-						if symbol==",":
-							accept(",")
-							nt_ExpressionList()
-						nt_assign_op()
-						nt_ExpressionList()
+					nt_SimpleStmtRhs()
 					if isSurelyStmt or symbol==";":
 						accept(";")
 						if symbol=="{":
@@ -1578,12 +1525,30 @@ def nt_ForStmt():
 
 	if symbol == ":=" and after_identifier:
 		accept(":=")
-		accept("range")
-		nt_Expression()
+		if symbol=="range":
+			accept("range")
+			nt_Expression()
+		else:
+			nt_ExpressionList()
+			acceptsemicolon()
+			if symbol != ";":
+				nt_Condition()
+			acceptsemicolon()
+			if symbol != "{": #FOLLOW(ForClause)
+				nt_PostStmt()
 	elif symbol == "=" and after_identifier:
 		accept("=")
-		accept("range")
-		nt_Expression()
+		if symbol=="range":
+			accept("range")
+			nt_Expression()
+		else:
+			nt_Expression()
+			acceptsemicolon()
+			if symbol != ";":
+				nt_Condition()
+			acceptsemicolon()
+			if symbol != "{": #FOLLOW(ForClause)
+				nt_PostStmt()
 	elif symbol != "{":
 		if after_identifier:
 			while symbol in {".", "[", "("}:
