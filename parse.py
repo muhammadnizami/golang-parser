@@ -38,9 +38,12 @@ def main(filename):
 		nt_SourceFile()
 
 		#output if no error
+		print("=========================================")
 		with open(filename) as file:
 			for line in file:
 				print(line,end='')
+		print()
+		print("=========================================")
 
 		print("no error was found. file syntax is valid")
 	except SystemExit as e:
