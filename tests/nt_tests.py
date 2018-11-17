@@ -58,7 +58,9 @@ tests = [
 	(nt_SourceFile, 'input-files/SourceFile_4', False),
 	(nt_SourceFile, 'input-files/SourceFile_5', False),
 	(nt_SourceFile, 'input-files/SourceFile_6', False),
-	(nt_SourceFile, 'input-files/SourceFile_10', True)
+	(nt_SourceFile, 'input-files/SourceFile_10', True),
+	(nt_SourceFile, 'input-files/SourceFile_11', True)
+
 ]
 
 def main():
