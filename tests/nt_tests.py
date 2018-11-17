@@ -59,7 +59,8 @@ tests = [
 	(nt_SourceFile, 'input-files/SourceFile_5', False),
 	(nt_SourceFile, 'input-files/SourceFile_6', False),
 	(nt_SourceFile, 'input-files/SourceFile_10', True),
-	(nt_SourceFile, 'input-files/SourceFile_11', True)
+	(nt_SourceFile, 'input-files/SourceFile_11', True),
+	(nt_SourceFile, 'input-files/SourceFile_12', True)
 
 ]
 

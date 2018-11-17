@@ -1,0 +1,7 @@
+package main;
+
+import "fmt"
+
+func ayam(){
+	var d = math.Sin(0.5) + 2.5i )
+}
