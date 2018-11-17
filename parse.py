@@ -62,6 +62,12 @@ def main(filename):
 						c_no=c_no+1
 					l=l+1
 			print('\033[0m')
+		else:
+			with open(filename) as file:
+				for line in file:
+					print(line,end='')
+				print()
+				print(colored('_','red'))
 		print("=========================================")
 		print("error! see above")
 
