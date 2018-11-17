@@ -53,8 +53,29 @@ tests = [
 	(nt_SourceFile, 'input-files/SourceFile_3', False),
 	(nt_SourceFile, 'input-files/SourceFile_4', False),
 	(nt_SourceFile, 'input-files/SourceFile_5', False),
+<<<<<<< HEAD
 	(nt_SourceFile, 'input-files/SourceFile_6', False),
 	(nt_SourceFile, 'input-files/SourceFile_10', True)
+||||||| merged common ancestors
+	(nt_SourceFile, 'input-files/SourceFile_10', True)
+
+||||||| merged common ancestors
+	#(nt_SourceFile, 'input-files/SourceFile_2', False),
+	# (nt_SourceFile, 'input-files/SourceFile_3', False),
+	# (nt_SourceFile, 'input-files/SourceFile_4', False),
+	(nt_SourceFile, 'input-files/SourceFile_5', False)
+=======
+	#(nt_SourceFile, 'input-files/SourceFile_2', False),
+	# (nt_SourceFile, 'input-files/SourceFile_3', False),
+	# (nt_SourceFile, 'input-files/SourceFile_4', False),
+	# (nt_SourceFile, 'input-files/SourceFile_5', False),
+	(nt_SourceFile, 'input-files/SourceFile_6', False),
+
+>>>>>>> new issue
+=======
+	(nt_SourceFile, 'input-files/SourceFile_10', True)
+
+>>>>>>> add new test case
 ]
 
 def main():
